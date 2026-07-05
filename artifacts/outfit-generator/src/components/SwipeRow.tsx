@@ -10,11 +10,11 @@ import { Plus } from "lucide-react";
 import { ClothingItem } from "@workspace/api-client-react";
 import { getImageUrl } from "@/lib/utils";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-export const ITEM_W   = 112; // px — card width
-export const ITEM_H   = 140; // px — card height
-export const ITEM_GAP =  10; // px — gap between cards
-export const HANGER_H =  26; // px — hanger decoration above card (closet mode)
+// ── Constants (fallback defaults) ─────────────────────────────────────────────
+export const ITEM_W   = 112;
+export const ITEM_H   = 140;
+export const ITEM_GAP =   9;
+export const HANGER_H =  24;
 
 // ── Public handle ─────────────────────────────────────────────────────────────
 export interface SwipeRowHandle {
@@ -28,157 +28,215 @@ interface SwipeRowProps {
   addLabel: string;
   onCenteredItem: (item: ClothingItem | null) => void;
   onAddClick: () => void;
-  /** Called when the currently-centred card is tapped (opens Item Details) */
   onItemTap?: (item: ClothingItem) => void;
-  /** Render in walk-in closet style: hangers, cream cards, gold dots */
   closetStyle?: boolean;
+  /** Override card width when closetStyle=true */
+  closetItemW?: number;
+  /** Override card height when closetStyle=true */
+  closetItemH?: number;
+  /** Override hanger height when closetStyle=true */
+  closetHangerH?: number;
 }
 
 // ── Hanger SVG ────────────────────────────────────────────────────────────────
-function HangerSVG({ width = 72, dim = false }: { width?: number; dim?: boolean }) {
-  const h = HANGER_H;
+function HangerSVG({
+  width = 72,
+  height: h,
+  dim = false,
+}: {
+  width?: number;
+  height: number;
+  dim?: boolean;
+}) {
   const hw = width;
-  const stroke = dim ? "rgba(176,136,40,0.45)" : "#C49B2A";
+  const stroke = dim ? "rgba(176,136,40,0.36)" : "#C49B2A";
+  const sw = "2.0";
   return (
     <svg width={hw} height={h} viewBox={`0 0 ${hw} ${h}`} fill="none" style={{ display: "block" }}>
-      {/* hook */}
       <path
-        d={`M${hw / 2} 3 Q${hw / 2} 1 ${hw / 2 + 3} 1 Q${hw / 2 + 8} 1 ${hw / 2 + 8} 6 Q${hw / 2 + 8} 11 ${hw / 2} 11`}
-        stroke={stroke} strokeWidth="2.4" strokeLinecap="round" fill="none"
+        d={`M${hw / 2} ${h * 0.12} Q${hw / 2} ${h * 0.04} ${hw / 2 + 3} ${h * 0.04} Q${hw / 2 + 7} ${h * 0.04} ${hw / 2 + 7} ${h * 0.26} Q${hw / 2 + 7} ${h * 0.46} ${hw / 2} ${h * 0.46}`}
+        stroke={stroke} strokeWidth={sw} strokeLinecap="round" fill="none"
       />
-      {/* neck stem */}
-      <line x1={hw / 2} y1="11" x2={hw / 2} y2={h - 6} stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
-      {/* left shoulder */}
-      <path d={`M${hw / 2} ${h - 6} Q${hw * 0.22} ${h - 8} 4 ${h}`} stroke={stroke} strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      {/* right shoulder */}
-      <path d={`M${hw / 2} ${h - 6} Q${hw * 0.78} ${h - 8} ${hw - 4} ${h}`} stroke={stroke} strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      {/* bottom bar */}
-      <line x1="4" y1={h} x2={hw - 4} y2={h} stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+      <line x1={hw / 2} y1={h * 0.46} x2={hw / 2} y2={h * 0.76} stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
+      <path d={`M${hw / 2} ${h * 0.76} Q${hw * 0.22} ${h * 0.84} 4 ${h}`} stroke={stroke} strokeWidth={sw} strokeLinecap="round" fill="none" />
+      <path d={`M${hw / 2} ${h * 0.76} Q${hw * 0.78} ${h * 0.84} ${hw - 4} ${h}`} stroke={stroke} strokeWidth={sw} strokeLinecap="round" fill="none" />
+      <line x1="4" y1={h} x2={hw - 4} y2={h} stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
     </svg>
   );
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export const SwipeRow = forwardRef<SwipeRowHandle, SwipeRowProps>(
-  ({ items, addLabel, onCenteredItem, onAddClick, onItemTap, closetStyle = false }, ref) => {
+  (
+    {
+      items,
+      addLabel,
+      onCenteredItem,
+      onAddClick,
+      onItemTap,
+      closetStyle = false,
+      closetItemW,
+      closetItemH,
+      closetHangerH,
+    },
+    ref
+  ) => {
+    const iW   = closetStyle && closetItemW   != null ? closetItemW   : ITEM_W;
+    const iH   = closetStyle && closetItemH   != null ? closetItemH   : ITEM_H;
+    const hH   = closetStyle && closetHangerH != null ? closetHangerH : HANGER_H;
+    const STEP = iW + ITEM_GAP;
+
     const containerRef = useRef<HTMLDivElement>(null);
     const itemRefs     = useRef<(HTMLDivElement | null)[]>([]);
     const lastSnapIdx  = useRef(-1);
-    const STEP = ITEM_W + ITEM_GAP;
-
     const [centredIdx, setCentredIdx] = useState(0);
 
-    // ── Imperative API ────────────────────────────────────────────────────────
-    useImperativeHandle(ref, () => ({
-      scrollToIndex: (index, smooth = true) => {
-        containerRef.current?.scrollTo({
-          left: index * STEP,
-          behavior: smooth ? "smooth" : "instant",
-        });
-      },
-      getLength: () => items.length,
-    }));
+    useImperativeHandle(
+      ref,
+      () => ({
+        scrollToIndex: (index, smooth = true) => {
+          containerRef.current?.scrollTo({
+            left: index * STEP,
+            behavior: smooth ? "smooth" : "instant",
+          });
+        },
+        getLength: () => items.length,
+      }),
+      [STEP, items.length]
+    );
 
-    // ── Visual update — direct DOM for smooth scroll ──────────────────────────
     const updateVisuals = useCallback(() => {
       const el = containerRef.current;
       if (!el || items.length === 0) return;
-
       const raw     = el.scrollLeft / STEP;
       const snapIdx = Math.max(0, Math.min(items.length - 1, Math.round(raw)));
-
       itemRefs.current.forEach((node, i) => {
         if (!node) return;
         const dist    = Math.abs(i - raw);
         const clamped = Math.min(dist, 1);
-        node.style.transform = `scale(${(1 - clamped * 0.12).toFixed(3)})`;
-        node.style.opacity   = closetStyle
-          ? (1 - clamped * 0.55).toFixed(3)
-          : (1 - clamped * 0.60).toFixed(3);
+        node.style.transform = `scale(${(1 - clamped * 0.10).toFixed(3)})`;
+        node.style.opacity   = (1 - clamped * 0.65).toFixed(3);
       });
-
       if (snapIdx !== lastSnapIdx.current) {
         lastSnapIdx.current = snapIdx;
         setCentredIdx(snapIdx);
         onCenteredItem(items[snapIdx] ?? null);
       }
-    }, [items, onCenteredItem, STEP, closetStyle]);
+    }, [items, onCenteredItem, STEP]);
 
+    // Re-sync centred item whenever the items array identity changes (reorder, replace)
+    // or when card width changes (forces a re-layout)
+    const itemIds = items.map(i => i.id).join(",");
     useEffect(() => {
+      if (items.length === 0) { onCenteredItem(null); return; }
+      const idx = Math.max(0, Math.min(items.length - 1,
+        lastSnapIdx.current < 0 ? 0 : lastSnapIdx.current
+      ));
+      lastSnapIdx.current = idx;
+      setCentredIdx(idx);
+      onCenteredItem(items[idx]);
       updateVisuals();
-      if (items.length > 0 && lastSnapIdx.current === -1) {
-        onCenteredItem(items[0]);
-      }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [items.length]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [itemIds, iW]);
 
-    // ── Card click: centre-then-open ──────────────────────────────────────────
     const handleCardClick = useCallback(
       (item: ClothingItem, idx: number) => {
-        if (idx === lastSnapIdx.current) {
-          onItemTap?.(item);
-        } else {
-          containerRef.current?.scrollTo({ left: idx * STEP, behavior: "smooth" });
-        }
+        if (idx === lastSnapIdx.current) onItemTap?.(item);
+        else containerRef.current?.scrollTo({ left: idx * STEP, behavior: "smooth" });
       },
       [onItemTap, STEP]
     );
 
-    // Heights
-    const rowH = closetStyle ? ITEM_H + HANGER_H : ITEM_H;
-    const containerH = rowH + (closetStyle ? 22 : 20); // +22 for dots in closet mode
-
-    // ── Empty row ─────────────────────────────────────────────────────────────
-    if (items.length === 0) {
-      if (closetStyle) {
-        return (
-          <div className="flex flex-col items-center" style={{ height: containerH }}>
-            <div style={{ opacity: 0.45 }}>
-              <HangerSVG width={ITEM_W * 0.65} dim />
-            </div>
-            <button
-              onClick={onAddClick}
-              className="flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-transform"
-              style={{
-                width: ITEM_W,
-                height: ITEM_H,
-                borderRadius: "0 0 14px 14px",
-                background: "rgba(255,252,245,0.75)",
-                border: "1.5px dashed rgba(196,155,42,0.45)",
-                boxShadow: "inset 0 2px 8px rgba(0,0,0,0.04)",
-              }}
-            >
-              <div
-                style={{
-                  width: 32, height: 32,
-                  borderRadius: "50%",
-                  background: "rgba(196,155,42,0.12)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <Plus className="w-4 h-4" style={{ color: "#C49B2A" }} />
-              </div>
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#C49B2A" }}>
-                {addLabel}
-              </span>
-            </button>
-          </div>
-        );
-      }
-
+    // ── 5-ghost empty state (closet mode) ─────────────────────────────────────
+    if (items.length === 0 && closetStyle) {
       return (
-        <div className="flex justify-center items-center" style={{ height: ITEM_H + 20 }}>
+        <div
+          style={{
+            width: "100%",
+            height: iH + hH,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ display: "flex", gap: ITEM_GAP, alignItems: "flex-end" }}>
+            {([-2, -1, 0, 1, 2] as const).map((offset) => {
+              const isCenter = offset === 0;
+              const dist     = Math.abs(offset);
+              const opacity  = dist === 0 ? 1 : dist === 1 ? 0.40 : 0.16;
+              const scale    = dist === 0 ? 1 : 0.90;
+              return (
+                <div
+                  key={offset}
+                  onClick={isCenter ? onAddClick : undefined}
+                  style={{
+                    width: iW, height: iH + hH,
+                    opacity, transform: `scale(${scale})`,
+                    transformOrigin: "bottom center",
+                    cursor: isCenter ? "pointer" : "default",
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                  }}
+                >
+                  <HangerSVG width={iW * 0.62} height={hH} dim={!isCenter} />
+                  <div
+                    style={{
+                      width: iW, height: iH,
+                      borderRadius: "0 0 10px 10px",
+                      background: "rgba(255,250,242,0.60)",
+                      border: "1.5px dashed rgba(196,155,42,0.34)",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center", gap: 4,
+                    }}
+                  >
+                    {isCenter && (
+                      <>
+                        <div
+                          style={{
+                            width: 26, height: 26, borderRadius: "50%",
+                            background: "rgba(196,155,42,0.12)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}
+                        >
+                          <Plus style={{ width: 13, height: 13, color: "rgba(196,155,42,0.55)" }} />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 8, fontWeight: 700, letterSpacing: "0.10em",
+                            textTransform: "uppercase", color: "rgba(196,155,42,0.52)",
+                            textAlign: "center", lineHeight: 1.2,
+                          }}
+                        >
+                          {addLabel}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Standard empty state ──────────────────────────────────────────────────
+    if (items.length === 0) {
+      return (
+        <div style={{ height: iH + 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <button
             onClick={onAddClick}
-            className="border-2 border-dashed border-black/35 rounded-2xl
-                       flex flex-col items-center justify-center gap-2
-                       bg-white/60 hover:border-black hover:bg-white transition-all active:scale-95"
-            style={{ width: ITEM_W, height: ITEM_H }}
+            className="flex flex-col items-center justify-center gap-2 transition-all active:scale-95"
+            style={{
+              width: iW, height: iH, borderRadius: 16,
+              border: "2px dashed rgba(0,0,0,0.22)",
+              background: "rgba(255,255,255,0.6)",
+            }}
           >
-            <div className="w-9 h-9 rounded-full border-2 border-black/35 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-black/45" />
+            <div style={{ width: 36, height: 36, borderRadius: "50%", border: "2px dashed rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Plus style={{ width: 18, height: 18, color: "rgba(0,0,0,0.30)" }} />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-black/45 text-center px-2 leading-tight">
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(0,0,0,0.30)", textAlign: "center", padding: "0 8px" }}>
               {addLabel}
             </span>
           </button>
@@ -186,148 +244,121 @@ export const SwipeRow = forwardRef<SwipeRowHandle, SwipeRowProps>(
       );
     }
 
-    // ── Scroll row ────────────────────────────────────────────────────────────
+    // ── Scroll carousel ───────────────────────────────────────────────────────
+    const rowH = closetStyle ? iH + hH : iH;
+
     return (
-      <div>
-        <div className="relative" style={{ height: rowH }}>
-          {/* Centre viewfinder — only in standard mode */}
-          {!closetStyle && (
-            <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                         pointer-events-none z-10 rounded-2xl"
-              style={{
-                width:     ITEM_W + 6,
-                height:    ITEM_H + 6,
-                boxShadow: "0 0 0 2.5px black, 0 4px 0 0 black",
-              }}
-            />
-          )}
-
-          {/* Scrollable strip */}
+      <div style={{ position: "relative", height: rowH, width: "100%" }}>
+        {!closetStyle && (
           <div
-            ref={containerRef}
-            onScroll={updateVisuals}
-            className="flex items-end h-full overflow-x-auto no-scrollbar"
-            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
-          >
-            <div className="flex-none shrink-0" style={{ width: `calc(50% - ${ITEM_W / 2}px)` }} />
+            style={{
+              position: "absolute", top: "50%", left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: iW + 6, height: iH + 6, borderRadius: 16,
+              boxShadow: "0 0 0 2.5px black, 0 4px 0 0 black",
+              pointerEvents: "none", zIndex: 10,
+            }}
+          />
+        )}
 
-            {items.map((item, i) => (
-              <div
-                key={item.id}
-                ref={(el) => { itemRefs.current[i] = el; }}
-                onClick={() => handleCardClick(item, i)}
-                className="flex-none flex flex-col relative cursor-pointer"
-                style={{
-                  width:           ITEM_W,
-                  height:          closetStyle ? ITEM_H + HANGER_H : ITEM_H,
-                  marginLeft:      i === 0 ? 0 : ITEM_GAP,
-                  scrollSnapAlign: "center",
-                  willChange:      "transform, opacity",
-                  transform:       "scale(1)",
-                  opacity:         i === 0 ? "1" : "0.45",
-                  paddingTop:      closetStyle ? HANGER_H : 0,
-                  alignSelf:       "flex-end",
-                }}
-              >
-                {/* Hanger — closet mode only */}
-                {closetStyle && (
-                  <div
-                    className="absolute left-0 right-0 flex justify-center pointer-events-none"
-                    style={{ top: 0, height: HANGER_H }}
-                  >
-                    <HangerSVG width={ITEM_W * 0.65} />
-                  </div>
-                )}
+        <div
+          ref={containerRef}
+          onScroll={updateVisuals}
+          className="no-scrollbar"
+          style={{
+            display: "flex", alignItems: "flex-end", height: "100%",
+            overflowX: "auto", scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none", msOverflowStyle: "none",
+          }}
+        >
+          <div style={{ flexShrink: 0, width: `calc(50% - ${iW / 2}px)` }} />
 
-                {/* Card */}
+          {items.map((item, i) => (
+            <div
+              key={item.id}
+              ref={(el) => { itemRefs.current[i] = el; }}
+              onClick={() => handleCardClick(item, i)}
+              style={{
+                flexShrink: 0, position: "relative", cursor: "pointer",
+                width: iW, height: closetStyle ? iH + hH : iH,
+                marginLeft: i === 0 ? 0 : ITEM_GAP,
+                scrollSnapAlign: "center",
+                willChange: "transform, opacity",
+                transform: "scale(1)",
+                opacity: i === 0 ? "1" : "0.35",
+                paddingTop: closetStyle ? hH : 0,
+                alignSelf: "flex-end",
+                display: "flex", flexDirection: "column",
+              }}
+            >
+              {closetStyle && (
                 <div
-                  className="flex flex-col overflow-hidden"
-                  style={
-                    closetStyle
-                      ? {
-                          flex: 1,
-                          borderRadius: "0 0 12px 12px",
-                          background: "rgba(255,252,248,0.95)",
-                          boxShadow: "0 6px 24px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05)",
-                          border: "1px solid rgba(196,155,42,0.12)",
-                        }
-                      : {
-                          flex: 1,
-                          borderRadius: 16,
-                          background: "white",
-                          border: "2px solid black",
-                        }
-                  }
+                  style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: hH,
+                    display: "flex", justifyContent: "center", pointerEvents: "none",
+                  }}
                 >
-                  {/* Photo */}
-                  <div
-                    className="flex-1 overflow-hidden relative"
-                    style={{
-                      backgroundImage: "repeating-conic-gradient(#ede8e0 0% 25%, #f9f4ee 0% 50%)",
-                      backgroundSize:  "10px 10px",
-                    }}
-                  >
-                    {item.imageObjectPath ? (
-                      <img
-                        src={getImageUrl(item.imageObjectPath)!}
-                        alt={item.name}
-                        className="w-full h-full object-contain"
-                        draggable={false}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-secondary/20 flex items-center justify-center p-2">
-                        <span className="text-black/20 text-2xl">
-                          {addLabel.includes("Top") ? "👚" : addLabel.includes("Bottom") ? "👖" : "👟"}
-                        </span>
-                      </div>
-                    )}
+                  <HangerSVG width={iW * 0.62} height={hH} />
+                </div>
+              )}
 
-                    {/* Tap-for-details badge — centred card only */}
-                    {i === centredIdx && (
-                      <div
-                        className="absolute bottom-1 right-1 flex items-center justify-center pointer-events-none"
-                        style={{
-                          width: 18, height: 18,
-                          borderRadius: "50%",
-                          background: closetStyle ? "rgba(196,155,42,0.75)" : "rgba(0,0,0,0.60)",
-                        }}
-                      >
-                        <span className="text-white font-bold" style={{ fontSize: 8 }}>i</span>
-                      </div>
-                    )}
-                  </div>
+              <div
+                style={
+                  closetStyle
+                    ? {
+                        flex: 1, overflow: "hidden", position: "relative",
+                        borderRadius: "0 0 10px 10px",
+                        background: "rgba(255,252,248,0.96)",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+                        border: "1px solid rgba(196,155,42,0.14)",
+                      }
+                    : {
+                        flex: 1, overflow: "hidden", position: "relative",
+                        borderRadius: 16, background: "white", border: "2px solid black",
+                      }
+                }
+              >
+                <div
+                  style={{
+                    width: "100%", height: "100%", position: "relative",
+                    backgroundImage: "repeating-conic-gradient(#ede8e0 0% 25%,#f9f4ee 0% 50%)",
+                    backgroundSize: "10px 10px",
+                  }}
+                >
+                  {item.imageObjectPath ? (
+                    <img
+                      src={getImageUrl(item.imageObjectPath)!}
+                      alt={item.name}
+                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                      draggable={false}
+                    />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "1.2rem", opacity: 0.26 }}>
+                        {addLabel.toLowerCase().includes("top") ? "👚" : addLabel.toLowerCase().includes("bottom") ? "👖" : "👟"}
+                      </span>
+                    </div>
+                  )}
+                  {i === centredIdx && (
+                    <div
+                      style={{
+                        position: "absolute", bottom: 3, right: 3,
+                        width: 15, height: 15, borderRadius: "50%",
+                        background: "rgba(196,155,42,0.76)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <span style={{ color: "white", fontSize: 7, fontWeight: 700 }}>i</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
 
-            <div className="flex-none shrink-0" style={{ width: `calc(50% - ${ITEM_W / 2}px)` }} />
-          </div>
+          <div style={{ flexShrink: 0, width: `calc(50% - ${iW / 2}px)` }} />
         </div>
-
-        {/* Dot indicators — closet mode */}
-        {closetStyle && items.length > 0 && (
-          <div className="flex justify-center items-center gap-1.5 mt-2.5">
-            {items.slice(0, 9).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width:        i === centredIdx ? 7 : 5,
-                  height:       i === centredIdx ? 7 : 5,
-                  borderRadius: "50%",
-                  background:   i === centredIdx ? "#C49B2A" : "rgba(196,155,42,0.28)",
-                  transition:   "all 0.25s ease",
-                  flexShrink:   0,
-                }}
-              />
-            ))}
-            {items.length > 9 && (
-              <span style={{ fontSize: 8, color: "rgba(196,155,42,0.5)", fontWeight: 700 }}>
-                +{items.length - 9}
-              </span>
-            )}
-          </div>
-        )}
       </div>
     );
   }
