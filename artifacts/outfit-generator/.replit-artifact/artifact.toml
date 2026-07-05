@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Outfit Generator"
+version = "1.0.0"
+id = "artifacts/outfit-generator"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21371
+
+[services.development]
+run = "pnpm --filter @workspace/outfit-generator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/outfit-generator", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/outfit-generator/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21371"
+BASE_PATH = "/"
