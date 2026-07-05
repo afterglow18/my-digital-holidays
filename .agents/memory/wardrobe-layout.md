@@ -53,21 +53,18 @@ Behaviour:
 doorL:   0.110   // inner left edge of closet
 doorR:   0.890   // inner right edge of closet
 
-rows[0] TOPS:    { btnCY: 0.278, boxY: 0.358, boxBot: 0.471 }
-rows[1] BOTTOMS: { btnCY: 0.480, boxY: 0.560, boxBot: 0.670 }
-rows[2] SHOES:   { btnCY: 0.685, boxY: 0.757, boxBot: 0.857 }
+rows[0] TOPS:    { btnCY: 0.278, boxY: 0.313, boxBot: 0.471 }
+rows[1] BOTTOMS: { btnCY: 0.480, boxY: 0.515, boxBot: 0.670 }
+rows[2] SHOES:   { btnCY: 0.685, boxY: 0.715, boxBot: 0.857 }
 
-// boxY  = fraction where the card container starts — BELOW the true hanger base.
-//         CRITICAL: must be measured at each row's SLOT 2 CENTER (x=427 for all rows)
-//         NOT at off-center sample positions — the center hanger is 30-40px taller
-//         than hangers at slot boundaries, as the hanger's bottom bar/cross-piece
-//         only appears at the center x.
-//         Slot-center hanger bases (scanned x=200,427,648):
-//           TOPS    y=634 → f=0.344  (s2 center last dark pixel)
-//           BOTTOMS y≈1008 → f=0.547
-//           SHOES   y=1372 → f=0.744
-//         Each boxY adds ~0.012-0.014 clearance above hanger base.
-// boxBot = fraction where cream interior ends (unchanged from image scan).
+// boxY  = TOP of the dotted placeholder rectangle = where cream starts in the image.
+//         Image cream-start scans: TOPS y=578 f=0.313, BOTTOMS y=950 f=0.515, SHOES y=1318 f=0.715.
+//         CARD BACKGROUND IS TRANSPARENT — hanger shows through in the un-photo'd area.
+//         Cards fill the FULL dotted box (including hanger area). Hanger is only visible
+//         in EMPTY slots where no card is rendered.
+//         NO internal padding on the card — objectFit:contain fills the full box.
+//         Do NOT try to clear the hanger by raising boxY; that breaks box alignment.
+// boxBot = fraction where cream interior ends (pixel-scanned).
 
 barY:     0.863
 barBot:   0.928

@@ -65,9 +65,9 @@ const LM = {
   // boxBot = fraction where the cream interior ends.
   // ClosetRow is placed at [boxY, boxBot]; no HTML hanger is rendered — image hangers show above.
   rows: [
-    { btnCY: 0.278, boxY: 0.358, boxBot: 0.471 }, // TOPS     slot-center scan: hanger base y=634 f=0.344
-    { btnCY: 0.480, boxY: 0.560, boxBot: 0.670 }, // BOTTOMS  slot-center scan: hanger base y≈1008 f=0.547
-    { btnCY: 0.685, boxY: 0.757, boxBot: 0.857 }, // SHOES    slot-center scan: hanger base y=1372 f=0.744
+    { btnCY: 0.278, boxY: 0.313, boxBot: 0.471 }, // TOPS     box top = cream start y=578 f=0.313
+    { btnCY: 0.480, boxY: 0.515, boxBot: 0.670 }, // BOTTOMS  box top = cream start y=950 f=0.515
+    { btnCY: 0.685, boxY: 0.715, boxBot: 0.857 }, // SHOES    box top = cream start y=1318 f=0.715
   ],
 
   // SAVE OUTFIT bar

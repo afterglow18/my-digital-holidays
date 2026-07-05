@@ -178,11 +178,6 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
     const cardW = slotW > 0 ? slotW : 0;
     const padX  = 0;
 
-    // Top padding keeps the clothing photo from touching the border; proportional
-    // to card height so it stays sensible on short viewports (small phones, landscape).
-    // Clamped: minimum 8px (always a visible gap), maximum 18px (never eats the photo).
-    const cardTopPad = Math.round(Math.max(8, Math.min(18, containerH * 0.15)));
-
     // Blush-pink selection indicator colours
     const PINK_BORDER = "rgba(225, 110, 155, 0.88)";
     const PINK_GLOW   = "0 0 0 2px rgba(225,110,155,0.22), 0 4px 18px rgba(225,110,155,0.28)";
@@ -270,9 +265,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
                     transition: "border-color 0.24s ease, border-width 0.24s ease, box-shadow 0.24s ease",
                     position: "relative",
                     pointerEvents: "none",
-                    // Small top inset only on selected card so image doesn't press
-                    // against the pink border. Non-selected has no border, needs no gap.
-                    padding: isCenter ? `${cardTopPad}px 4px 4px` : "0",
+                    padding: 0,
                   }}
                 >
                   {item.imageObjectPath ? (
