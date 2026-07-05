@@ -1,93 +1,91 @@
 ---
-name: Wardrobe image layout strategy
-description: How the closet background image is sized and overlays are positioned on the wardrobe page
+name: Wardrobe layout strategy
+description: Background image sizing, landmark fractions, ClosetRow contract, and hanger overlay technique for the My Digital Closet app.
 ---
 
-## Current image
+## Background image
 
-`/closet-bg.png` — 853×1844 PNG (user-supplied, 3 baked-in placeholder cards per row).
+**Current file:** `artifacts/outfit-generator/public/closet-bg.png`
+**Dimensions:** 1023×1537 px (aspect ratio 0.6657 — wider than tall relative to portrait phones)
 
-## Sizing strategy
+**Rendering:** `object-fit: contain` inside a container of `min(calc(100dvh - 90px), calc(100vw * 1.5025))`.
+- On portrait phones (e.g. 390×844): image fills width (390×586 px), container exactly matches → no letterbox.
+- On wide screens: image fills height with small side letterbox.
+- Container background `#F0C030` (door yellow) blends with the yellow doors.
+- `useImageRect`: if `cR > iR` → fill height, side letterbox (`rT=0`); else → fill width, `rT=0` (image anchored to top).
 
-`object-fit: CONTAIN` inside `calc(100dvh − 90px)` container.
+## Landmark fractions (1023×1537 image)
 
-Image ratio 853/1844 ≈ 0.4626.
-Container ratio on iPhone 390×754 ≈ 0.517 → container wider → image fills HEIGHT.
-
-| Device | rW (px) | rL each side |
-|---|---|---|
-| iPhone SE  375×577 | 267 | 54 px |
-| iPhone 390 ×754   | 349 | 21 px |
-| iPhone Max 430×842| 390 | 20 px |
-
-Container background `#F0C030` — side letterbox blends with yellow door colour.
-
-## Overlay philosophy
-
-The PNG already has all visual UI baked in. HTML provides:
-- **Transparent tap zones** over every baked-in button
-- **ClosetRow** (no background) rendered over the **rectangular dotted box area only**
-- **Empty slots**: image's dashed placeholder cards show through (ClosetRow is transparent)
-- **Image hangers**: baked-in gold hanger graphics sit ABOVE the ClosetRow container and are always visible — ClosetRow renders NO HTML hanger
-
-## ClosetRow component
-
-`src/components/ClosetRow.tsx` — fixed 3-slot carousel, no hanger rendering.
-
-Behaviour:
-- Divides its container into 3 equal slots (left / center / right), `overflow:hidden`
-- Card fills the **FULL slot width** (`cardW = slotW`, `padX = 0`) for pixel-perfect horizontal alignment with the dotted boxes
-- Card fills the **full container height** (= the rectangular dotted box, below the image's hanger)
-- `borderRadius: "10px"` all corners — matches the placeholder box shape
-- Selected item: 4.5px blush-pink border + outer glow; unselected: 1.5px warm-gold hairline
-- Border/shadow always transition (0.24s ease) so the highlight glides to the new card on swipe
-- `hasDragged` ref prevents synthetic click triggering after a drag
-- Tracks last-notified item **ID** (not index) for accurate parent `centred` map
-- No `hangerH` prop — hanger concept was removed entirely
-
-**Why cardW = slotW (not * 0.88):** Using 88% width left ~5px side gaps that exposed the image's dotted border — didn't match the annotation requirement of zero side gap. Full slotW eliminates the gap without affecting swipe/snap logic (which is slot-based).
-
-## Landmark fractions (853×1844 PNG, pixel-scanned via ImageMagick)
+All fractions are of the **image's own width/height**, applied via `pX/pY/pW/pH` helpers in `wardrobe.tsx`.
 
 ```
-doorL:   0.110   // inner left edge of closet
-doorR:   0.890   // inner right edge of closet
+doorL: 0.127  (x≈130)
+doorR: 0.865  (x≈885)
 
-rows[0] TOPS:    { btnCY: 0.278, boxY: 0.313, boxBot: 0.471 }
-rows[1] BOTTOMS: { btnCY: 0.480, boxY: 0.515, boxBot: 0.670 }
-rows[2] SHOES:   { btnCY: 0.685, boxY: 0.715, boxBot: 0.857 }
+rows[0] TOPS:
+  btnCY:     0.202   rod centre y≈310
+  boxY:      0.217   ClosetRow top — just below rod (y≈333)
+  boxBot:    0.558   ClosetRow bottom — before BOTTOMS rod (y≈857)
+  hangerTop: 0.217   hanger overlay top = boxY
+  hangerBot: 0.393   hanger overlay bottom — below centre hanger arms (y≈604)
 
-// boxY  = TOP of the dotted placeholder rectangle = where cream starts in the image.
-//         Image cream-start scans: TOPS y=578 f=0.313, BOTTOMS y=950 f=0.515, SHOES y=1318 f=0.715.
-//         CARD BACKGROUND IS TRANSPARENT — hanger shows through in the un-photo'd area.
-//         Cards fill the FULL dotted box (including hanger area). Hanger is only visible
-//         in EMPTY slots where no card is rendered.
-//         NO internal padding on the card — objectFit:contain fills the full box.
-//         Do NOT try to clear the hanger by raising boxY; that breaks box alignment.
-// boxBot = fraction where cream interior ends (pixel-scanned).
+rows[1] BOTTOMS:
+  btnCY:     0.567   rod y≈871
+  boxY:      0.576   below BOTTOMS rod (y≈885)
+  boxBot:    0.773   before SHOES rod (y≈1188)
+  hangerTop: 0.576
+  hangerBot: 0.632   below BOTTOMS hanger arms (y≈971)
 
-barY:     0.863
-barBot:   0.928
+rows[2] SHOES:
+  btnCY:     0.781   rod y≈1200
+  boxY:      0.790   below SHOES rod (y≈1214) — no hanging hangers visible
+  boxBot:    0.896   above SAVE bar (y≈1377)
+  hangerTop: 0.790
+  hangerBot: 0.800   minimal overlay — only rod shadow
+
+barY:     0.898
+barBot:   0.973
 hangerCX: 0.140
 saveBtnL: 0.228
 saveBtnR: 0.772
 manneCX:  0.860
 ```
 
-## ClosetRow container positioning (wardrobe.tsx)
+**Pixel-scan notes:**
+- Left-slot hanger (x≈200): arm base at y≈510 (gold arm ends abruptly)
+- Centre hanger (x=511): pink, taller — arms reach y≈600
+- SHOES rod: y≈1192–1207 at x=200, 511, 760; no hanging hangers below it
+- Rod detection: scan for dark-gold pixels (R>150,G>70,B<80) at centre x=511
+
+## ClosetRow contract
+
+Cards are **3:4 portrait ratio**: `cardW = slotW`, `cardH = slotW * 4/3`.
+- `objectFit: "cover"`, `objectPosition: "center"` — fills card, centres the clothing.
+- Container is `overflow: hidden` — if `cardH > containerH`, bottom of card clips.
+  - TOPS: 200px container, 128px card → fits with space below ✓
+  - BOTTOMS: 115px container, 128px card → 13px clipped at bottom (negligible)
+  - SHOES: 62px container, 128px card → top ~62px of card visible (acceptable for shoe photos)
+- Selected card: 4.5px blush-pink border + outer glow. Non-selected: no border, transparent bg.
+- `cardW = slotW = containerWidth / 3`. The 3-slot carousel fills the doorL→doorR interior.
+
+## Hanger overlay technique (z=20)
+
+Gold/pink hangers are baked into the background image. To keep them visually **above** clothing
+photos, each row renders a second `<div>` at z=20 that re-draws the background-image crop:
 
 ```
-top:    pY(ir, lm.boxY)                          // = ir.top + ir.height * boxY
-height: pH(ir, lm.boxBot - lm.boxY)
-left:   pX(ir, LM.doorL)
-right:  ir.left + pW(ir, 1 - LM.doorR)
-overflow: hidden
-// NO background — transparent, image placeholder cards show through empty slots
-// Image's gold hanger graphics are ABOVE this container (boxY is below the hanger)
+backgroundImage:    url('/closet-bg.png')
+backgroundSize:     `${ir.width}px ${ir.height}px`
+backgroundPosition: `${-pW(ir, LM.doorL)}px ${-pH(ir, lm.hangerTop)}px`
+backgroundRepeat:   no-repeat
+pointerEvents:      none
 ```
 
-**Why boxY not carY:** Original `carY` landed inside the hanger graphic area; adding a hangerH offset inside ClosetRow compounded the misalignment. The fix was to measure `boxY` = exact bottom of the hanger graphic, position ClosetRow there, and remove hangerH entirely.
+**Why this works:** The div's CSS origin is at `(pX(ir, doorL), pY(ir, hangerTop))`.
+Applying `backgroundPosition = (-pW(doorL), -pH(hangerTop))` shifts the background image
+so its apparent origin lands exactly at `(ir.left, ir.top)` in the container — matching
+the main `<img>` layer pixel-for-pixel.
 
-**How to re-calibrate if the image changes:** Run ImageMagick dense vertical scans at 5 sample x-positions spanning doorL→doorR (e.g. x=160,220,280,370,430). Find the y range where ≥4/5 sample points return r>240, g>215, b>195. The transition INTO that range = boxY; the transition OUT = boxBot. Convert y→fraction by dividing by image height (1844).
-
-**Why ClosetRow over SwipeRow:** SwipeRow overflows the closet bounds; ClosetRow is pinned to the 3-slot box with overflow:hidden.
+**Future re-calibration:** scan at slot-centre x-positions (x≈180, 511, 810 for 1023px wide)
+at relevant y ranges to find hanger arm bottoms. Centre hanger (pink) extends 80–90px below
+the gold side hangers; always use the centre measurement for `hangerBot`.

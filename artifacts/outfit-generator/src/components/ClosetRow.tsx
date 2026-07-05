@@ -173,9 +173,10 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
 
     const lo    = Math.max(0, centredIdx - 2);
     const hi    = Math.min(items.length - 1, centredIdx + 2);
-    // Card fills the EXACT slot width so it overlays the dotted placeholder box
-    // with pixel-perfect horizontal alignment — no side padding.
+    // Card: full slot width, 3:4 portrait aspect ratio.
+    // objectFit:cover fills the card and clips excess — clothing stays centred.
     const cardW = slotW > 0 ? slotW : 0;
+    const cardH = cardW * (4 / 3);   // 3:4 portrait (width:height = 3:4)
     const padX  = 0;
 
     // Blush-pink selection indicator colours
@@ -244,28 +245,25 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
                   WebkitTapHighlightColor: "transparent",
                 }}
               >
-                {/* Photo card — fills the full container height (= rectangular dotted box).
-                    Blush-pink border + glow on selected; always-on transition so the
-                    highlight glides smoothly to the newly-centred card on every swipe. */}
+                {/* Photo card — 3:4 portrait ratio (cardW × cardH), object-fit:cover.
+                    Blush-pink border + glow on selected; smooth transition on every swipe.
+                    Sits behind the hanger overlay (z=20) rendered in wardrobe.tsx. */}
                 <div
                   style={{
-                    width: "100%",
-                    height: "100%",
+                    width: cardW,
+                    height: cardH,
                     overflow: "hidden",
-                    // Rounded corners clip the image; matches the placeholder box shape
                     borderRadius: "10px",
-                    // Transparent — no white/cream box behind the clothing photo
                     background: "transparent",
-                    // Selected: blush-pink border. Non-selected: no border, no box.
                     border: isCenter
                       ? `4.5px solid ${PINK_BORDER}`
                       : "none",
                     boxShadow: isCenter ? PINK_GLOW : "none",
-                    // box-sizing: border-box keeps outer size stable across states
                     transition: "border-color 0.24s ease, border-width 0.24s ease, box-shadow 0.24s ease",
                     position: "relative",
                     pointerEvents: "none",
                     padding: 0,
+                    flexShrink: 0,
                   }}
                 >
                   {item.imageObjectPath ? (
@@ -276,7 +274,8 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
                       style={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "contain",
+                        objectFit: "cover",
+                        objectPosition: "center",
                         display: "block",
                       }}
                     />

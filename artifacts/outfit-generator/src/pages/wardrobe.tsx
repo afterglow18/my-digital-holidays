@@ -1,20 +1,23 @@
 /**
- * WardrobePage — closet-bg.png (853×1844 PNG)
+ * WardrobePage — closet-bg.png (1023×1844 PNG, new image)
  *
  * Sizing: object-fit CONTAIN inside calc(100dvh − 90px).
- *   Image ratio 0.4626 < iPhone container ratio → fills height, ~21 px side letterbox.
- *   Container background #F0C030 (door yellow) makes letterbox look like door extension.
+ *   Image ratio 0.6657 > iPhone container ratio (≈0.52) → fills width, side letterbox at bottom.
+ *   Container background #F0C030 (door yellow) blends with yellow doors.
  *
  * Layout (z-index):
  *   0   background <img>
- *   10  ClosetRow carousels — positioned exactly over image's 3 placeholder boxes
- *   12  Transparent "+ ADD" tap zones (never move)
+ *   10  ClosetRow carousels — positioned from below the rod, behind hangers
+ *   12  Transparent "+ ADD" tap zones
  *   14  Transparent SAVE OUTFIT / shuffle / mannequin tap zones
- *   20  Save-outfit name-input popup
+ *   20  Hanger overlays — crop of the background image re-rendered on top of clothing cards
  *   30+ Modals
  *
- * ClosetRow: fixed 3-slot (left|center|right) view, no background, swipe to navigate.
- * Empty rows: ClosetRow not rendered → image placeholder cards show through.
+ * Hanger overlay technique:
+ *   Each row renders a second div that uses closet-bg.png as background-image,
+ *   aligned with background-size/position to exactly match the main image layer.
+ *   This ensures the gold hangers always appear ABOVE the clothing photos even
+ *   when the ClosetRow extends into the hanger area.
  */
 
 import React, {
@@ -49,30 +52,56 @@ const ROWS: { key: RowKey; addLabel: string; btnLabel: string }[] = [
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
-const IMG_W = 853;
-const IMG_H = 1844;
+const IMG_W = 1023;
+const IMG_H = 1537;
 const NAV_H = 90;
 
-// ── Landmark fractions (measured from the 853×1844 PNG) ──────────────────────
+// ── Landmark fractions (measured from the 1023×1537 PNG) ─────────────────────
 // All x-values are fractions of image WIDTH; y-values of image HEIGHT.
+//
+// Strategy: ClosetRow containers start just BELOW the gold rod (not below the
+// hanger arms).  A hanger overlay div at z=20 re-renders the background image
+// crop over the hanger area, keeping the gold/pink hangers visually on top.
+//
+// boxY     = just below the gold rod — where the ClosetRow starts
+// boxBot   = where the ClosetRow ends (just before next rod)
+// hangerTop/hangerBot = the hanger graphic region (overlay at z=20)
+//   TOPS:    rod y≈295–325, pink center hanger base y≈600 (px in image)
+//   BOTTOMS: rod y≈864–878, hanger base y≈965
+//   SHOES:   rod y≈1192–1207, no hanging hangers → overlay is minimal
 const LM = {
   // Inner closet edges (just inside the yellow doors)
-  doorL: 0.110,
-  doorR: 0.890,
+  doorL: 0.127,
+  doorR: 0.865,
 
-  // Per-row: y-centre of the "+ ADD" pill, then the RECTANGULAR placeholder box bounds.
-  // boxY  = fraction where the cream placeholder interior starts (pixel-exact from image scan).
-  // boxBot = fraction where the cream interior ends.
-  // ClosetRow is placed at [boxY, boxBot]; no HTML hanger is rendered — image hangers show above.
+  // Per-row landmarks
   rows: [
-    { btnCY: 0.278, boxY: 0.313, boxBot: 0.471 }, // TOPS     box top = cream start y=578 f=0.313
-    { btnCY: 0.480, boxY: 0.515, boxBot: 0.670 }, // BOTTOMS  box top = cream start y=950 f=0.515
-    { btnCY: 0.685, boxY: 0.715, boxBot: 0.857 }, // SHOES    box top = cream start y=1318 f=0.715
+    {
+      btnCY:     0.202, // centre of "+ ADD TOPS" pill (gold rod centre y=310)
+      boxY:      0.217, // ClosetRow top — just below rod bottom (y≈333)
+      boxBot:    0.558, // ClosetRow bottom — just before BOTTOMS rod (y≈857)
+      hangerTop: 0.217, // hanger overlay top = boxY
+      hangerBot: 0.393, // hanger overlay bottom — below centre hanger arms (y≈604)
+    },
+    {
+      btnCY:     0.567, // centre of "+ ADD BOTTOMS" pill (rod y≈871)
+      boxY:      0.576, // just below BOTTOMS rod (y≈885)
+      boxBot:    0.773, // just before SHOES rod (y≈1188)
+      hangerTop: 0.576,
+      hangerBot: 0.632, // below BOTTOMS hanger arms (y≈971)
+    },
+    {
+      btnCY:     0.781, // centre of "+ ADD SHOES" pill (rod y≈1200)
+      boxY:      0.790, // just below SHOES rod (y≈1214) — no hangers hanging
+      boxBot:    0.896, // just above SAVE bar (y≈1377)
+      hangerTop: 0.790,
+      hangerBot: 0.800, // minimal overlay — only covers the rod bottom shadow
+    },
   ],
 
   // SAVE OUTFIT bar
-  barY:     0.863,
-  barBot:   0.928,
+  barY:     0.898,
+  barBot:   0.973,
   hangerCX: 0.140,
   saveBtnL: 0.228,
   saveBtnR: 0.772,
@@ -93,8 +122,10 @@ function useImageRect(containerRef: RefObject<HTMLDivElement>): ImgRect {
       const cR = cW / cH;
       let rW: number, rH: number, rL: number, rT: number;
       if (cR > iR) {
+        // Container wider than image: fill height, center horizontally
         rH = cH; rW = cH * iR; rT = 0; rL = (cW - rW) / 2;
       } else {
+        // Container taller than image (new wider image): fill width, anchor top
         rW = cW; rH = cW / iR; rL = 0; rT = 0;
       }
       setRect({ top: rT, left: rL, width: rW, height: rH });
@@ -119,7 +150,6 @@ export default function WardrobePage() {
   const containerRef = useRef<HTMLDivElement>(null!);
   const ir = useImageRect(containerRef);
 
-  // One ref per clothing row for shuffle
   const rowRefs: Record<RowKey, RefObject<ClosetRowHandle | null>> = {
     tops:    useRef<ClosetRowHandle | null>(null),
     bottoms: useRef<ClosetRowHandle | null>(null),
@@ -147,7 +177,6 @@ export default function WardrobePage() {
   const queryClient = useQueryClient();
   const { tier, caps, canAddItem, canSaveOutfit } = useEntitlements();
 
-  // Clear centred selection when a row becomes empty (prevents stale saves)
   useEffect(() => {
     setCentred(prev => {
       const next = { ...prev };
@@ -161,7 +190,6 @@ export default function WardrobePage() {
     });
   }, [tops.length, bottoms.length, shoes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Stable callbacks ──────────────────────────────────────────────────────
   const setCentredTops    = useCallback((item: ClothingItem | null) =>
     setCentred(p => ({ ...p, tops:    item ?? undefined })), []);
   const setCentredBottoms = useCallback((item: ClothingItem | null) =>
@@ -234,9 +262,12 @@ export default function WardrobePage() {
       style={{
         position: "relative",
         width: "100%",
-        height: `calc(100dvh - ${NAV_H}px)`,
+        // Constrain height so the image fills the container exactly (no letterbox gap).
+        // On portrait phones the image fills width at 1023:1537 ratio; use that height
+        // but never exceed the available viewport above the nav bar.
+        height: `min(calc(100dvh - ${NAV_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
         overflow: "hidden",
-        // Door-yellow background: the ~21 px side letterbox blends with the yellow doors
+        // Door-yellow background blends with yellow doors visible at sides/bottom
         background: "#F0C030",
       }}
     >
@@ -286,17 +317,23 @@ export default function WardrobePage() {
             const lm    = LM.rows[rowIdx];
             const items = rowData[key];
 
-            // Carousel container — placed at the rectangular placeholder box bounds.
-            // The image's baked-in hanger graphics sit above carTop and show through.
+            // ClosetRow container: from below the rod down to just before next rod.
+            // The photo cards start here; the hanger overlay (z=20) sits on top.
             const carTop   = pY(ir, lm.boxY);
             const carH     = pH(ir, lm.boxBot - lm.boxY);
             const carLeft  = pX(ir, LM.doorL);
-            // CSS `right` = distance from the container's right edge to doorR_x
             const carRight = ir.left + pW(ir, 1 - LM.doorR);
 
-            // "+ ADD" tap zone — fixed above the carousel zone, never moves
+            // "+ ADD" tap zone — centred on the gold rod / pill
             const tapH   = Math.max(36, pH(ir, 0.052));
             const tapTop = pY(ir, lm.btnCY) - tapH / 2;
+
+            // Hanger overlay — exact crop of the background image showing the hanger
+            // region, rendered at z=20 so it sits above clothing photos.
+            // background-position aligns the crop to match the main background img.
+            const hangerH = pH(ir, lm.hangerBot - lm.hangerTop);
+            const hangerBgPosX = -pW(ir, LM.doorL);           // offset left by doorL
+            const hangerBgPosY = -(pH(ir, lm.hangerTop));     // offset up by hangerTop (rT=0)
 
             return (
               <React.Fragment key={key}>
@@ -319,7 +356,7 @@ export default function WardrobePage() {
                   }}
                 />
 
-                {/* ClosetRow — only when items exist; no background overlay */}
+                {/* ClosetRow — clothing photos, sits behind the hanger overlay */}
                 {items.length > 0 && (
                   <div
                     data-testid={`row-${key}`}
@@ -330,8 +367,6 @@ export default function WardrobePage() {
                       right:  carRight,
                       height: carH,
                       zIndex: 10,
-                      // No background — image's dashed placeholder cards show through for
-                      // any slot that isn't occupied by a real clothing item
                       overflow: "hidden",
                     }}
                   >
@@ -343,6 +378,27 @@ export default function WardrobePage() {
                     />
                   </div>
                 )}
+
+                {/* Hanger overlay — re-renders the hanger region of the background
+                    image at z=20 so gold hangers always appear above clothing photos.
+                    Uses background-image + precise background-position to align
+                    pixel-perfectly with the main <img> background layer. */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    top:    pY(ir, lm.hangerTop),
+                    left:   carLeft,
+                    right:  carRight,
+                    height: hangerH,
+                    zIndex: 20,
+                    pointerEvents: "none",
+                    backgroundImage: "url('/closet-bg.png')",
+                    backgroundSize:     `${ir.width}px ${ir.height}px`,
+                    backgroundPosition: `${hangerBgPosX}px ${hangerBgPosY}px`,
+                    backgroundRepeat:   "no-repeat",
+                  }}
+                />
               </React.Fragment>
             );
           })}
@@ -448,7 +504,6 @@ export default function WardrobePage() {
                   border: "none",
                   cursor: "pointer",
                   borderRadius: 20,
-                  // Gold glow when a complete outfit is ready to save
                   boxShadow: canSave
                     ? "0 0 0 2.5px rgba(196,155,42,0.55), 0 4px 16px rgba(200,168,24,0.28)"
                     : "none",
