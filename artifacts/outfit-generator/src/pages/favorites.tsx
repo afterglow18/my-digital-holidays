@@ -125,7 +125,7 @@ export default function FavoritesPage() {
         </button>
         <div>
           <h1 className="font-display font-bold text-2xl uppercase tracking-tighter leading-none">
-            Totally
+            Totally 💛
           </h1>
           {favorites.length > 0 && (
             <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider mt-0.5">
