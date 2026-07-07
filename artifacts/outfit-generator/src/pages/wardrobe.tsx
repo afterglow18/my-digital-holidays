@@ -337,7 +337,12 @@ export default function WardrobePage() {
               const nextOverlayTop = i < LM.rows.length - 1
                 ? rowTapTops[i + 1]
                 : pY(ir, LM.barY);
-              const carTop = Math.max(pY(ir, lm.boxY), rowTapBots[i] + GAP_PX);
+              // Shoes (i===2): anchor photos to the rod bottom so the gap
+              // matches tops/bottoms visually.  The z=20 overlay still covers
+              // tapTop → carTop, so the ADD button stays crisp above the photos.
+              const carTop = i === 2
+                ? pY(ir, lm.boxY) + GAP_PX
+                : Math.max(pY(ir, lm.boxY), rowTapBots[i] + GAP_PX);
               const carH   = Math.max(0, nextOverlayTop - carTop);
               return { carTop, carH };
             });
