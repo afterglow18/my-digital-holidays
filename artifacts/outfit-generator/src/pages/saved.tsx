@@ -307,7 +307,7 @@ export default function SavedPage() {
                                 <Plus className="w-3.5 h-3.5 text-black/25" />
                               </div>
                               {i === 0 ? (
-                                <span className="text-[8px] font-bold uppercase text-black/25 whitespace-nowrap">+ Accessories</span>
+                                <span className="text-[8px] font-bold uppercase text-black/25 whitespace-nowrap">+ EXTRAS</span>
                               ) : (
                                 <span className="text-[8px]">&nbsp;</span>
                               )}
