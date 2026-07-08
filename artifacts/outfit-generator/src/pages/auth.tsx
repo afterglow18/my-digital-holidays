@@ -65,8 +65,8 @@ export default function AuthPage({ onAuthenticated }: { onAuthenticated: () => v
     }
   }, [mode, email, password, login, register, onAuthenticated]);
 
-  // Card positioned in the middle of the closet image
-  const cardTop = ir ? ir.top + ir.height * 0.32 : null;
+  // Card positioned lower so more of the closet is visible above
+  const cardTop = ir ? ir.top + ir.height * 0.52 : null;
 
   return (
     <div
@@ -247,13 +247,13 @@ export default function AuthPage({ onAuthenticated }: { onAuthenticated: () => v
                   fontWeight: 800,
                   fontSize: 15,
                   letterSpacing: "-0.01em",
-                  color: "#3a2400",
+                  color: "#fff",
                   background: loading
-                    ? "rgba(245,216,64,0.5)"
-                    : "linear-gradient(to bottom, #f5d840, #c89018)",
+                    ? "rgba(255,182,193,0.5)"
+                    : "linear-gradient(to bottom, #ff91b0, #e0437a)",
                   border: "none",
                   cursor: loading ? "not-allowed" : "pointer",
-                  boxShadow: "0 4px 16px rgba(200,144,24,0.35)",
+                  boxShadow: "0 4px 16px rgba(224,67,122,0.40)",
                   transition: "opacity 0.15s",
                 }}
               >
