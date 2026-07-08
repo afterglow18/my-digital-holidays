@@ -60,10 +60,8 @@ Welcome to My Digital Closet — your AI-powered wardrobe is here. Catalog your 
 
 ## Support URL
 
-*(Set this to your deployed app URL or a dedicated support page)*
-
 ```
-https://your-app-url.replit.app
+https://app.notion.com/p/My-Digital-Closet-Support-39782db60653802a9088dcbae84c0527?source=copy_link
 ```
 
 ## Marketing URL (optional)

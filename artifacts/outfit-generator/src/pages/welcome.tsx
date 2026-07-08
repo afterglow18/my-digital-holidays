@@ -265,6 +265,24 @@ export default function WelcomePage({ onEnter }: Props) {
       >
         Privacy Policy
       </a>
+      <a
+        href="https://app.notion.com/p/My-Digital-Closet-Support-39782db60653802a9088dcbae84c0527?source=copy_link"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: "fixed",
+          bottom: 10,
+          right: 16,
+          fontSize: 11,
+          fontWeight: 600,
+          color: "rgba(255,255,255,0.45)",
+          textDecoration: "none",
+          letterSpacing: "0.02em",
+          zIndex: 210,
+        }}
+      >
+        Support
+      </a>
     </div>
   );
 }
