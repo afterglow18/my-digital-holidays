@@ -6,6 +6,7 @@ import WardrobePage from './pages/wardrobe';
 import GeneratePage from './pages/generate';
 import SavedPage from './pages/saved';
 import FavoritesPage from './pages/favorites';
+import AccountPage from './pages/account';
 import WelcomePage from './pages/welcome';
 import AuthPage from './pages/auth';
 import { setGlobalTier } from '@/hooks/useEntitlements';
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/generate" component={GeneratePage} />
         <Route path="/saved" component={SavedPage} />
         <Route path="/favorites" component={FavoritesPage} />
+        <Route path="/account" component={AccountPage} />
         <Redirect to="/" />
       </Switch>
     </AppLayout>

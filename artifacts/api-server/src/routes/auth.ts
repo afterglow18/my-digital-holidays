@@ -84,6 +84,60 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.json({ token, user: { id: user.id, email: user.email } });
 });
 
+// PATCH /api/auth/me — change email and/or password
+router.patch("/auth/me", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as AuthRequest).userId;
+  const { currentPassword, newEmail, newPassword } = req.body as {
+    currentPassword?: string;
+    newEmail?: string;
+    newPassword?: string;
+  };
+
+  if (!currentPassword) {
+    res.status(400).json({ error: "Current password is required" });
+    return;
+  }
+  if (!newEmail && !newPassword) {
+    res.status(400).json({ error: "Provide a new email or new password" });
+    return;
+  }
+  if (newPassword && newPassword.length < 6) {
+    res.status(400).json({ error: "New password must be at least 6 characters" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) { res.status(401).json({ error: "Current password is incorrect" }); return; }
+
+  const updates: Partial<{ email: string; passwordHash: string }> = {};
+
+  if (newEmail) {
+    const normalized = newEmail.toLowerCase().trim();
+    if (normalized === user.email) {
+      res.status(400).json({ error: "That's already your email address" });
+      return;
+    }
+    const [taken] = await db.select().from(usersTable).where(eq(usersTable.email, normalized));
+    if (taken) { res.status(409).json({ error: "An account with that email already exists" }); return; }
+    updates.email = normalized;
+  }
+
+  if (newPassword) {
+    updates.passwordHash = await bcrypt.hash(newPassword, 12);
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set(updates)
+    .where(eq(usersTable.id, userId))
+    .returning({ id: usersTable.id, email: usersTable.email });
+
+  res.json({ user: updated });
+});
+
 // GET /api/auth/me
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthRequest).userId;

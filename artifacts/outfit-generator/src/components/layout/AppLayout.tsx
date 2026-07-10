@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Shirt, Sparkles, Bookmark, LogOut } from "lucide-react";
+import { Shirt, Sparkles, Bookmark, LogOut, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetWardrobeStats } from "@workspace/api-client-react";
 import { useAuthContext } from "@/context/AuthContext";
@@ -18,6 +18,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { href: "/", label: "Wardrobe", icon: Shirt, badge: stats?.total },
     { href: "/generate", label: "Generate", icon: Sparkles },
     { href: "/saved", label: "Saved", icon: Bookmark },
+    { href: "/account", label: "Account", icon: UserCircle },
   ];
 
   return (
