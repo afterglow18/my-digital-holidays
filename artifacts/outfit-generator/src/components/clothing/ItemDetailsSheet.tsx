@@ -379,7 +379,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                        hover:border-red-500 hover:text-red-600 transition-all"
           >
             <Trash2 className="w-4 h-4" />
-            Remove from Closet
+            Delete from Closet Forever
           </button>
         ) : (
           <div className="flex gap-2">
@@ -400,7 +400,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                          active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
                          disabled:opacity-50"
             >
-              {deleteItem.isPending ? "Deleting…" : "Yes, Delete"}
+              {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
             </button>
           </div>
         )}

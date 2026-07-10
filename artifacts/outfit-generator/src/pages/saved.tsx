@@ -331,19 +331,19 @@ export default function SavedPage() {
                   {/* Main 3-column look: top · bottom · shoes */}
                   <div className="grid grid-cols-3 gap-2 mb-2">
                     {/* Hero: top or dress */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       {heroItem ? (
                         <>
-                          <div className="relative">
-                            <ItemPhoto item={heroItem} size="lg" onClick={() => setDetailsItem(heroItem)} />
+                          <ItemPhoto item={heroItem} size="lg" onClick={() => setDetailsItem(heroItem)} />
+                          <div className="flex items-center justify-between px-0.5">
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">
+                              {byCategory["dresses"] ? "Dress" : "Top"}
+                            </span>
                             <button onClick={() => handleRemoveItem(outfit.id, heroItem.id)}
-                              className="absolute top-1 right-1 w-5 h-5 bg-white border border-black rounded-full flex items-center justify-center shadow-sm z-10 hover:bg-red-50">
-                              <X className="w-2.5 h-2.5" />
+                              className="w-4 h-4 flex items-center justify-center rounded-full bg-black/10 hover:bg-red-100 transition-colors">
+                              <X className="w-2.5 h-2.5 text-black/50" />
                             </button>
                           </div>
-                          <span className="text-[9px] font-bold uppercase text-center text-muted-foreground">
-                            {byCategory["dresses"] ? "Dress" : "Top"}
-                          </span>
                         </>
                       ) : (
                         <div className="h-32 border-2 border-dashed border-black/20 rounded flex items-center justify-center">
@@ -353,28 +353,28 @@ export default function SavedPage() {
                     </div>
 
                     {/* Bottom */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       {bottomItem && !byCategory["dresses"] ? (
                         <>
-                          <div className="relative">
-                            <ItemPhoto item={bottomItem} size="lg" onClick={() => setDetailsItem(bottomItem)} />
+                          <ItemPhoto item={bottomItem} size="lg" onClick={() => setDetailsItem(bottomItem)} />
+                          <div className="flex items-center justify-between px-0.5">
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">Bottom</span>
                             <button onClick={() => handleRemoveItem(outfit.id, bottomItem.id)}
-                              className="absolute top-1 right-1 w-5 h-5 bg-white border border-black rounded-full flex items-center justify-center shadow-sm z-10 hover:bg-red-50">
-                              <X className="w-2.5 h-2.5" />
+                              className="w-4 h-4 flex items-center justify-center rounded-full bg-black/10 hover:bg-red-100 transition-colors">
+                              <X className="w-2.5 h-2.5 text-black/50" />
                             </button>
                           </div>
-                          <span className="text-[9px] font-bold uppercase text-center text-muted-foreground">Bottom</span>
                         </>
                       ) : byCategory["dresses"] && outerwearItem ? (
                         <>
-                          <div className="relative">
-                            <ItemPhoto item={outerwearItem} size="lg" onClick={() => setDetailsItem(outerwearItem)} />
+                          <ItemPhoto item={outerwearItem} size="lg" onClick={() => setDetailsItem(outerwearItem)} />
+                          <div className="flex items-center justify-between px-0.5">
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">Jacket</span>
                             <button onClick={() => handleRemoveItem(outfit.id, outerwearItem.id)}
-                              className="absolute top-1 right-1 w-5 h-5 bg-white border border-black rounded-full flex items-center justify-center shadow-sm z-10 hover:bg-red-50">
-                              <X className="w-2.5 h-2.5" />
+                              className="w-4 h-4 flex items-center justify-center rounded-full bg-black/10 hover:bg-red-100 transition-colors">
+                              <X className="w-2.5 h-2.5 text-black/50" />
                             </button>
                           </div>
-                          <span className="text-[9px] font-bold uppercase text-center text-muted-foreground">Jacket</span>
                         </>
                       ) : (
                         <div className="h-32 border-2 border-dashed border-black/20 rounded flex items-center justify-center">
@@ -384,17 +384,17 @@ export default function SavedPage() {
                     </div>
 
                     {/* Shoes */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       {shoesItem ? (
                         <>
-                          <div className="relative">
-                            <ItemPhoto item={shoesItem} size="lg" onClick={() => setDetailsItem(shoesItem)} />
+                          <ItemPhoto item={shoesItem} size="lg" onClick={() => setDetailsItem(shoesItem)} />
+                          <div className="flex items-center justify-between px-0.5">
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">Shoes</span>
                             <button onClick={() => handleRemoveItem(outfit.id, shoesItem.id)}
-                              className="absolute top-1 right-1 w-5 h-5 bg-white border border-black rounded-full flex items-center justify-center shadow-sm z-10 hover:bg-red-50">
-                              <X className="w-2.5 h-2.5" />
+                              className="w-4 h-4 flex items-center justify-center rounded-full bg-black/10 hover:bg-red-100 transition-colors">
+                              <X className="w-2.5 h-2.5 text-black/50" />
                             </button>
                           </div>
-                          <span className="text-[9px] font-bold uppercase text-center text-muted-foreground">Shoes</span>
                         </>
                       ) : (
                         <div className="h-32 border-2 border-dashed border-black/20 rounded flex items-center justify-center">
