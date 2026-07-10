@@ -93,9 +93,13 @@ router.patch("/outfits/:id", requireAuth, async (req, res): Promise<void> => {
     .where(and(eq(savedOutfitsTable.id, params.data.id), eq(savedOutfitsTable.userId, userId)));
   if (!outfit) { res.status(404).json({ error: "Outfit not found" }); return; }
 
+  const updateFields: Record<string, unknown> = {};
+  if (body.data.name !== undefined) updateFields.name = body.data.name;
+  if (body.data.notes !== undefined) updateFields.notes = body.data.notes;
+
   const [updated] = await db
     .update(savedOutfitsTable)
-    .set({ name: body.data.name })
+    .set(updateFields)
     .where(eq(savedOutfitsTable.id, params.data.id))
     .returning();
 

@@ -79,10 +79,17 @@ export default function SavedPage() {
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const [editingNotesId, setEditingNotesId] = useState<number | null>(null);
+  const [notesValue, setNotesValue] = useState("");
+  const notesInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (renamingId !== null) renameInputRef.current?.focus();
   }, [renamingId]);
+
+  useEffect(() => {
+    if (editingNotesId !== null) notesInputRef.current?.focus();
+  }, [editingNotesId]);
 
   const startRename = (id: number, currentName: string) => {
     setRenamingId(id);
@@ -93,11 +100,28 @@ export default function SavedPage() {
     const trimmed = renameValue.trim();
     if (trimmed && trimmed !== outfits?.find((o) => o.id === id)?.name) {
       renameOutfit.mutate(
-        { id, name: trimmed },
+        { id, data: { name: trimmed } },
         { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
       );
     }
     setRenamingId(null);
+  };
+
+  const startEditNotes = (id: number, currentNotes: string | null | undefined) => {
+    setEditingNotesId(id);
+    setNotesValue(currentNotes ?? "");
+  };
+
+  const commitNotes = (id: number) => {
+    const trimmed = notesValue.trim();
+    const current = outfits?.find((o) => o.id === id)?.notes ?? "";
+    if (trimmed !== (current ?? "")) {
+      renameOutfit.mutate(
+        { id, data: { notes: trimmed || null } },
+        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+      );
+    }
+    setEditingNotesId(null);
   };
 
   const isFree = tier === "free";
@@ -265,6 +289,41 @@ export default function SavedPage() {
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
+                </div>
+
+                {/* Notes */}
+                <div className="px-4 py-2 border-b border-black/10">
+                  {editingNotesId === outfit.id ? (
+                    <form onSubmit={(e) => { e.preventDefault(); commitNotes(outfit.id); }} className="flex gap-2">
+                      <textarea
+                        ref={notesInputRef}
+                        value={notesValue}
+                        onChange={(e) => setNotesValue(e.target.value)}
+                        onBlur={() => commitNotes(outfit.id)}
+                        rows={2}
+                        maxLength={300}
+                        placeholder="Add notes…"
+                        className="flex-1 text-xs border-2 border-black rounded-lg px-2 py-1.5 resize-none outline-none focus:ring-2 focus:ring-primary bg-white"
+                      />
+                      <button type="submit" className="self-start w-7 h-7 flex items-center justify-center bg-black text-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0">
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => startEditNotes(outfit.id, outfit.notes)}
+                      className="w-full text-left group"
+                    >
+                      {outfit.notes ? (
+                        <p className="text-xs text-black/60 leading-snug flex items-start gap-1">
+                          <span className="flex-1">{outfit.notes}</span>
+                          <Pencil className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                        </p>
+                      ) : (
+                        <p className="text-xs text-black/25 italic">Add notes…</p>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Outfit grid */}

@@ -284,7 +284,8 @@ export const RenameOutfitParams = zod.object({
 })
 
 export const RenameOutfitBody = zod.object({
-  "name": zod.string().min(1)
+  "name": zod.string().min(1).optional(),
+  "notes": zod.string().nullable().optional()
 })
 
 /**
