@@ -6,9 +6,9 @@ import {
   DeleteOutfitParams,
   RenameOutfitParams,
   RenameOutfitBody,
-  AddOutfitItemParams,
-  AddOutfitItemBody,
-  RemoveOutfitItemParams,
+  AddItemToOutfitParams,
+  AddItemToOutfitBody,
+  RemoveItemFromOutfitParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../middleware/requireAuth.js";
 
@@ -114,10 +114,10 @@ router.patch("/outfits/:id", requireAuth, async (req, res): Promise<void> => {
 
 router.patch("/outfits/:id/items", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthRequest).userId;
-  const params = AddOutfitItemParams.safeParse(req.params);
+  const params = AddItemToOutfitParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
 
-  const body = AddOutfitItemBody.safeParse(req.body);
+  const body = AddItemToOutfitBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
 
   const [outfit] = await db
@@ -148,7 +148,7 @@ router.patch("/outfits/:id/items", requireAuth, async (req, res): Promise<void> 
 
 router.delete("/outfits/:id/items/:itemId", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthRequest).userId;
-  const params = RemoveOutfitItemParams.safeParse(req.params);
+  const params = RemoveItemFromOutfitParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
 
   const [outfit] = await db
