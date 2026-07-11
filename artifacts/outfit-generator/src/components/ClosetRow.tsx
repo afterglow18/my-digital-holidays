@@ -67,7 +67,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
       const measure = () => {
         const el = containerRef.current;
         if (!el) return;
-        setSlotW(el.clientWidth / 3);
+        setSlotW(el.clientWidth / 2);
         setContH(el.clientHeight);
       };
       measure();

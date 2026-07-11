@@ -178,13 +178,11 @@ export default function WardrobePage() {
   const ready     = ir.width > 0;
 
   // ── Section layout helpers ────────────────────────────────────────────────
-  // Each section: items fill from sectionTop to shelfY.
-  // Compute a uniform maxPhotoH from the tightest section.
+  // Each row gets its own height ceiling so rows don't all shrink to the
+  // size of the smallest section.
   const sectionHeights = ready
     ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
     : LM.rows.map(() => 0);
-  const minSectionH  = ready ? Math.min(...sectionHeights) : 0;
-  const maxPhotoH    = Math.max(0, minSectionH - 4);
 
   return (
     <div
@@ -280,7 +278,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={maxPhotoH}
+                      maxPhotoH={Math.max(0, sectionHeights[rowIdx] - 4)}
                     />
                   </div>
                 )}
