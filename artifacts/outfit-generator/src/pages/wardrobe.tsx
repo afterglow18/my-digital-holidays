@@ -171,13 +171,16 @@ export default function WardrobePage() {
   const [isSaveOpen,    setIsSaveOpen]    = useState(false);
   const [saveName,      setSaveName]      = useState("");
 
-  const { data: tops    = [] } = useListClothing({ category: "tops"    }, { query: { queryKey: getListClothingQueryKey({ category: "tops"    }) } });
-  const { data: bottoms = [] } = useListClothing({ category: "bottoms" }, { query: { queryKey: getListClothingQueryKey({ category: "bottoms" }) } });
-  const { data: shoes   = [] } = useListClothing({ category: "shoes"   }, { query: { queryKey: getListClothingQueryKey({ category: "shoes"   }) } });
+  const { data: tops        = [] } = useListClothing({ category: "tops"        }, { query: { queryKey: getListClothingQueryKey({ category: "tops"        }) } });
+  const { data: bottoms     = [] } = useListClothing({ category: "bottoms"     }, { query: { queryKey: getListClothingQueryKey({ category: "bottoms"     }) } });
+  const { data: shoes       = [] } = useListClothing({ category: "shoes"       }, { query: { queryKey: getListClothingQueryKey({ category: "shoes"       }) } });
+  const { data: accessories = [] } = useListClothing({ category: "accessories" }, { query: { queryKey: getListClothingQueryKey({ category: "accessories" }) } });
+  const { data: outerwear   = [] } = useListClothing({ category: "outerwear"   }, { query: { queryKey: getListClothingQueryKey({ category: "outerwear"   }) } });
+  const { data: dresses     = [] } = useListClothing({ category: "dresses"     }, { query: { queryKey: getListClothingQueryKey({ category: "dresses"     }) } });
   const { data: outfits = [] } = useListOutfits();
 
   const rowData: Record<RowKey, ClothingItem[]> = { tops, bottoms, shoes };
-  const totalItems = tops.length + bottoms.length + shoes.length;
+  const totalItems = tops.length + bottoms.length + shoes.length + accessories.length + outerwear.length + dresses.length;
 
   const saveOutfit  = useSaveOutfit();
   const queryClient = useQueryClient();
