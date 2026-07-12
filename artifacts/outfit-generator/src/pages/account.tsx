@@ -260,11 +260,14 @@ export default function AccountPage() {
         <button
           onClick={logout}
           className="w-full flex items-center justify-center gap-2 py-3
-                     border-2 border-black rounded-2xl bg-white
-                     font-display font-bold text-sm uppercase tracking-tight
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
-                     hover:bg-muted"
+                     rounded-2xl font-display font-bold text-sm uppercase tracking-tight
+                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+          style={{
+            background: "linear-gradient(to bottom, #F4D6DD, #D9A7B3)",
+            border: "2px solid #D9A7B3",
+            color: "#4A3A3A",
+            boxShadow: "3px 3px 0 rgba(0,0,0,0.18)",
+          }}
         >
           <LogOut className="w-4 h-4" />
           Sign Out
