@@ -280,19 +280,6 @@ export default function GeneratePage() {
 
               return (
                 <React.Fragment key={key}>
-                  {/* Cover the baked-in ADD pill text with a matching pink pill shape.
-                      Width/position mirrors the background image button.               */}
-                  <div style={{
-                    position: "absolute",
-                    top:    btnCY - btnH / 2,
-                    left:   pX(ir, 0.385),
-                    width:  pW(ir, 0.238),
-                    height: btnH,
-                    zIndex: 15,
-                    background: "rgb(249,224,224)",
-                    borderRadius: 999,
-                    pointerEvents: "none",
-                  }} />
 
                   {items.length > 0 ? (
                     <div
