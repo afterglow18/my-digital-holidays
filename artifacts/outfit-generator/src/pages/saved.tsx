@@ -73,6 +73,7 @@ export default function SavedPage() {
   const { tier } = useEntitlements();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [replacingSlot, setReplacingSlot] = useState<{ outfitId: number; category: SlotKey } | null>(null);
+  const [addingExtra, setAddingExtra]     = useState<number | null>(null);
   const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -147,6 +148,15 @@ export default function SavedPage() {
       { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
     );
     setReplacingSlot(null);
+  };
+
+  const handlePickedExtra = (item: ClothingItem) => {
+    if (addingExtra == null) return;
+    addItemToOutfit.mutate(
+      { id: addingExtra, data: { itemId: item.id } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+    );
+    setAddingExtra(null);
   };
 
   return (
@@ -344,32 +354,46 @@ export default function SavedPage() {
                     })}
                   </div>
 
-                  {/* Any extra items that don't fit a known slot */}
-                  {extras.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-black/10 flex gap-2 overflow-x-auto no-scrollbar">
-                      {extras.map((item) => (
-                        <div key={item.id} className="flex-none flex flex-col items-center gap-0.5 relative">
-                          <button onClick={() => setDetailsItem(item)}>
-                            <div className="w-12 h-12 border-2 border-black overflow-hidden" style={{ background: "#FDECEF" }}>
+                  {/* 5 fixed extra slots */}
+                  <div className="mt-3 pt-3 border-t border-black/10">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-black/30 mb-2">Extras</p>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        const item = extras[i];
+                        return item ? (
+                          <div key={item.id} className="relative flex flex-col gap-0.5">
+                            <button
+                              onClick={() => setDetailsItem(item)}
+                              className="w-full aspect-square border-2 border-black overflow-hidden rounded"
+                              style={{ background: "#FDECEF" }}
+                            >
                               {item.imageObjectPath ? (
                                 <img src={getImageUrl(item.imageObjectPath)!} alt={item.name} className="w-full h-full object-contain" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <span className="text-[8px] font-bold uppercase text-black/30">—</span>
+                                  <span className="text-[8px] font-bold text-black/30">—</span>
                                 </div>
                               )}
-                            </div>
-                          </button>
+                            </button>
+                            <button
+                              onClick={() => handleRemoveItem(outfit.id, item.id)}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-white border border-black rounded-full flex items-center justify-center shadow-sm z-10"
+                            >
+                              <X className="w-2 h-2" />
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => handleRemoveItem(outfit.id, item.id)}
-                            className="absolute top-0 right-0 w-4 h-4 bg-white border border-black rounded-full flex items-center justify-center shadow-sm z-10"
+                            key={`empty-${i}`}
+                            onClick={() => setAddingExtra(outfit.id)}
+                            className="aspect-square border-2 border-dashed border-black/25 rounded flex items-center justify-center hover:border-black/50 hover:bg-black/5 transition-colors"
                           >
-                            <X className="w-2 h-2" />
+                            <Plus className="w-3 h-3 text-black/25" />
                           </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Footer: item count */}
@@ -413,6 +437,21 @@ export default function SavedPage() {
               outfits?.find((o) => o.id === replacingSlot.outfitId)?.items?.map((i) => i.id) ?? []
             }
             onPick={handlePickedItem}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* All-category picker for extras */}
+      <AnimatePresence>
+        {addingExtra !== null && (
+          <WardrobePickerSheet
+            key={`extra-${addingExtra}`}
+            open
+            onOpenChange={(open) => { if (!open) setAddingExtra(null); }}
+            existingItemIds={
+              outfits?.find((o) => o.id === addingExtra)?.items?.map((i) => i.id) ?? []
+            }
+            onPick={handlePickedExtra}
           />
         )}
       </AnimatePresence>

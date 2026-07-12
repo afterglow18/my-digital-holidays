@@ -30,7 +30,8 @@ const CATEGORY_LABELS: Record<Category, string> = {
 interface Props {
   open:         boolean;
   onOpenChange: (open: boolean) => void;
-  category:     Category;
+  /** When omitted, shows all categories (for picking extras) */
+  category?:    Category;
   /** Called with the chosen item so the parent can add it to the outfit */
   onPick:       (item: ClothingItem) => void;
   /** Items already in the outfit — shown with a checkmark but still tappable */
@@ -41,14 +42,14 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch all items in this category
-  const params = { category: category as ListClothingCategory };
+  // When category is provided fetch that category; otherwise fetch all
+  const params = category ? { category: category as ListClothingCategory } : {};
   const { data: items, isLoading } = useListClothing(
     params,
     { query: { queryKey: getListClothingQueryKey(params), enabled: open } }
   );
 
-  const label = CATEGORY_LABELS[category];
+  const label = category ? CATEGORY_LABELS[category] : "Extra";
 
   const handleClose = () => onOpenChange(false);
 
@@ -145,25 +146,27 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
           )}
         </div>
 
-        {/* Footer — Add New button */}
-        <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
-          <button
-            onClick={() => setShowQuickAdd(true)}
-            className="w-full flex items-center justify-center gap-2 py-3
-                       border-4 border-black rounded-2xl bg-primary font-display font-bold
-                       text-base uppercase tracking-tight
-                       shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            Add New {label} to Vanity
-          </button>
-        </div>
+        {/* Footer — Add New button (only when a specific category is selected) */}
+        {category && (
+          <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
+            <button
+              onClick={() => setShowQuickAdd(true)}
+              className="w-full flex items-center justify-center gap-2 py-3
+                         border-4 border-black rounded-2xl bg-primary font-display font-bold
+                         text-base uppercase tracking-tight
+                         shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+                         active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              Add New {label} to Vanity
+            </button>
+          </div>
+        )}
       </motion.div>
 
       {/* QuickAddSheet for uploading a brand-new item */}
       <AnimatePresence>
-        {showQuickAdd && (
+        {showQuickAdd && category && (
           <QuickAddSheet
             open
             onOpenChange={(o) => setShowQuickAdd(o)}
