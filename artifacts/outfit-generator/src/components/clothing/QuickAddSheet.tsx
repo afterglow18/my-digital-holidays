@@ -137,10 +137,10 @@ interface Props {
 }
 
 const PHOTO_TIPS = [
-  "Lay the item flat.",
-  "Use a plain, consistent background (bed, sheet, or blanket).",
-  "Take the photo directly from above.",
-  "Make sure the entire item is visible.",
+  "Photograph individual products or bundle multiple items together.",
+  "Lay everything flat on a plain background.",
+  "Take the photo from directly above.",
+  "Keep all items fully in frame.",
 ] as const;
 
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
@@ -314,7 +314,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <div className="border-2 border-black rounded-2xl bg-white p-4
                               shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
-                  <span>📸</span> Photo Tips
+                  <span>📸</span> PHOTO TIPS
                 </p>
                 <ul className="flex flex-col gap-2">
                   {PHOTO_TIPS.map((tip) => (
