@@ -311,15 +311,15 @@ export default function WelcomePage({ onEnter }: Props) {
               fontSize: 15,
               letterSpacing: "0.03em",
               color: "#fff",
-              background: "rgba(160,10,60,0.60)",
-              border: "1.5px solid rgba(255,140,170,0.45)",
+              background: "rgba(140,70,50,0.65)",
+              border: "1.5px solid rgba(210,140,120,0.45)",
               borderRadius: 100,
               padding: "13px 38px",
               cursor: "pointer",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
               whiteSpace: "nowrap",
-              boxShadow: "0 4px 28px rgba(160,0,60,0.45), inset 0 1px 0 rgba(255,255,255,0.12)",
+              boxShadow: "0 4px 28px rgba(140,70,50,0.45), inset 0 1px 0 rgba(255,255,255,0.12)",
             }}
           >
             Enter Vanity ✨
