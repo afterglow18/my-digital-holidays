@@ -23,7 +23,7 @@ type Category = "makeup" | "skincare" | "hair" | "fragrances";
 const CATEGORY_LABELS: Record<Category, string> = {
   makeup:     "Makeup",
   skincare:   "Skincare",
-  hair:       "Hair",
+  hair:       "Haircare",
   fragrances: "Fragrance",
 };
 

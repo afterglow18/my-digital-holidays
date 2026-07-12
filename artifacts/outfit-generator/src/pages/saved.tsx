@@ -24,7 +24,7 @@ type SlotKey = (typeof SLOT_ORDER)[number];
 const SLOT_LABELS: Record<SlotKey, string> = {
   makeup:     "Makeup",
   skincare:   "Skincare",
-  hair:       "Hair",
+  hair:       "Haircare",
   fragrances: "Fragrance",
 };
 
