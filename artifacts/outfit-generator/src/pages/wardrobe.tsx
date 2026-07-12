@@ -284,17 +284,24 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Category label ── */}
-                <div style={{
-                  position: "absolute",
-                  top: labelY,
-                  left: carLeft,
-                  width: carW,
-                  transform: "translateY(-50%)",
-                  zIndex: 12,
-                  textAlign: "center",
-                  pointerEvents: "none",
-                }}>
+                {/* ── Category label (tappable → add photo) ── */}
+                <button
+                  onClick={addHandlers[key]}
+                  aria-label={btnLabel}
+                  style={{
+                    position: "absolute",
+                    top: labelY,
+                    left: carLeft,
+                    width: carW,
+                    transform: "translateY(-50%)",
+                    zIndex: 23,
+                    textAlign: "center",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
                   <span style={{
                     fontSize: Math.max(9, pH(ir, 0.013)),
                     fontWeight: 800,
@@ -305,7 +312,7 @@ export default function WardrobePage() {
                   }}>
                     {btnLabel}
                   </span>
-                </div>
+                </button>
 
                 {/* ── Item carousel — fills the section between buttons ── */}
                 {items.length > 0 && (
