@@ -241,18 +241,18 @@ export default function WardrobePage() {
           {/* ── Page title ── */}
           <div style={{
             position: "absolute",
-            top: pY(ir, 0.006), left: "50%",
-            transform: "translateX(-50%)",
+            top: pY(ir, 0.138),
+            left: pX(ir, LM.doorL),
+            width: pW(ir, LM.doorR - LM.doorL),
             zIndex: 25,
             textAlign: "center",
             pointerEvents: "none",
-            whiteSpace: "nowrap",
           }}>
             <div style={{
               fontFamily: "var(--font-display, serif)",
               fontWeight: 900,
-              fontSize: Math.max(10, pW(ir, 0.038)),
-              letterSpacing: "0.18em",
+              fontSize: Math.max(9, pW(ir, 0.032)),
+              letterSpacing: "0.16em",
               textTransform: "uppercase",
               color: "#1a0800",
               lineHeight: 1.1,
