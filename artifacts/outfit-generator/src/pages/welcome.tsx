@@ -45,7 +45,8 @@ export default function WelcomePage({ onEnter }: Props) {
 
   const handleOpen = () => {
     if (phase !== "idle") return;
-    finish();
+    setPhase("exiting");
+    setTimeout(finish, 500);
   };
 
   const isOpen     = phase !== "idle";
