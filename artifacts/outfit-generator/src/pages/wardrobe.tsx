@@ -60,8 +60,8 @@ const NAV_H = 90;
 // Main body:     y ≈ 0.42 → 0.80   (rows 3 & 4)
 // doorL/doorR:   left/right inner walls of the suitcase interior
 const LM = {
-  doorL: 0.07,   // inner left wall
-  doorR: 0.93,   // inner right wall
+  doorL: 0.207,  // inner left wall
+  doorR: 0.801,  // inner right wall
 
   rows: [
     { sectionTop: 0.130, shelfY: 0.225, btnCY: 0.110 },  // OUTFITS  (lid, upper)
