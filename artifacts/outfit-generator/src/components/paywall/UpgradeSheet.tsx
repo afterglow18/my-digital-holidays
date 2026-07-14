@@ -39,7 +39,7 @@ const HEADLINES: Record<UpgradeReason, string> = {
 };
 
 const SUBTITLES: Record<UpgradeReason, string> = {
-  items:     "You've reached the free 20 item limit. Upgrade once, pack everything.",
+  items:     "You've reached the free 20 item limit.\nUpgrade once, pack everything.",
   outfits:   "You've hit the free outfit limit. Upgrade to save every look.",
   mannequin: "A premium feature — unlock it once.",
 };
@@ -183,7 +183,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
           <h1 className="font-display font-bold text-[2.1rem] uppercase tracking-tight leading-[0.88]">
             {HEADLINES[reason]}
           </h1>
-          <p className="text-xs font-semibold text-black/45 mt-1.5">
+          <p className="text-xs font-semibold text-black/45 mt-1.5" style={{ whiteSpace: "pre-line" }}>
             {SUBTITLES[reason]}
           </p>
         </div>
