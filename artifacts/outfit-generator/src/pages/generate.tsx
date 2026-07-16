@@ -397,7 +397,7 @@ export default function GeneratePage() {
                     padding: "3px 11px", borderRadius: 20,
                     whiteSpace: "nowrap",
                   }}>
-                    Building your case…
+                    Planning your trip…
                   </span>
                 </motion.div>
               )}
