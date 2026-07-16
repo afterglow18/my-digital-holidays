@@ -12,6 +12,7 @@ import { Download, Upload, RefreshCw, Loader2, Check, AlertTriangle, ShieldCheck
 import { exportBackup, importBackup, pickBackupFile } from "@/lib/backup";
 import { useSubscription } from "@/lib/revenuecat";
 import { useQueryClient } from "@tanstack/react-query";
+import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
 import {
   getListClothingQueryKey,
   getListOutfitsQueryKey,
@@ -82,12 +83,11 @@ export default function AccountPage() {
   const qc = useQueryClient();
   const {
     isSubscribed,
-    offerings,
-    purchase,
     restore,
-    isPurchasing,
     isRestoring,
   } = useSubscription();
+
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const { isLockEnabled, setLockEnabled } = useBiometricLock();
   const [lockPending, setLockPending] = useState(false);
@@ -144,26 +144,6 @@ export default function AccountPage() {
     }
   };
 
-  const handlePurchase = async () => {
-    const pkg = offerings?.current?.availablePackages?.[0];
-    if (!pkg) {
-      flash(
-        "error",
-        Capacitor.isNativePlatform()
-          ? "No products available yet — try again shortly."
-          : "Purchases only work on iOS.",
-      );
-      return;
-    }
-    try {
-      await purchase(pkg);
-      flash("success", "Purchase successful — welcome to Pro! 🎉");
-    } catch (err: unknown) {
-      const m = err instanceof Error ? err.message : "";
-      if (!m.toLowerCase().includes("cancel")) flash("error", m || "Purchase failed");
-    }
-  };
-
   const handleRestore = async () => {
     try {
       await restore();
@@ -173,12 +153,8 @@ export default function AccountPage() {
     }
   };
 
-  // Price from RC offering; fall back for browser preview
-  const rcPkg = offerings?.current?.availablePackages?.[0];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const priceString: string = (rcPkg as any)?.product?.priceString ?? "$9.99";
-
   return (
+    <>
     <div
       className="min-h-full flex flex-col px-4 pb-10"
       style={{ paddingTop: "max(2rem, env(safe-area-inset-top))", background: "#F5F0E8" }}
@@ -232,10 +208,9 @@ export default function AccountPage() {
             </div>
           ) : (
             <YellowButton
-              onClick={handlePurchase}
-              pending={isPurchasing}
-              icon={isPurchasing ? Loader2 : (() => null)}
-              label={`Upgrade — ${priceString} Lifetime`}
+              onClick={() => setShowUpgrade(true)}
+              icon={() => null}
+              label="Unlock Forever — $9.99"
             />
           )}
 
@@ -338,5 +313,12 @@ export default function AccountPage() {
 
       </div>
     </div>
+
+    <AnimatePresence>
+      {showUpgrade && (
+        <UpgradeSheet reason="items" onClose={() => setShowUpgrade(false)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
