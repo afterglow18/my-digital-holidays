@@ -1,13 +1,13 @@
-# My Digital Closet — App Store Connect Listing
+# My Digital Holidays — App Store Connect Listing
 
 ## Identity
 
 | Field | Value |
 |---|---|
-| **App Name** | My Digital Closet |
+| **App Name** | My Digital Holidays |
 | **Subtitle** (30 chars max) | Style your wardrobe with AI |
-| **Bundle ID** | com.mydigitalcloset.app |
-| **SKU** | MYDIGITALCLOSET001 |
+| **Bundle ID** | com.mydigitalholidays.app |
+| **SKU** | MYDIGITALHOLIDAYS001 |
 | **Primary Category** | Lifestyle |
 | **Secondary Category** | Shopping |
 | **Content Rating** | 4+ |
@@ -106,11 +106,11 @@ Key points to cover:
 
 | Field | Value |
 |---|---|
-| **Reference Name** | My Digital Closet Premium |
-| **Product ID** | com.mydigitalcloset.app.premium |
+| **Reference Name** | My Digital Holidays Premium |
+| **Product ID** | com.mydigitalholidays.app.premium |
 | **Type** | Non-Consumable |
 | **Price** | $4.99 (Tier 5) |
-| **Display Name** | My Digital Closet Premium |
+| **Display Name** | My Digital Holidays Premium |
 | **Description** | Unlimited wardrobe items and saved outfits. One-time purchase — no subscription. |
 
 ---
