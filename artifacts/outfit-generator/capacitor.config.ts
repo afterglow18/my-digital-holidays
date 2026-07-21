@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.mydigitalholidays.app',
-  appName: 'My Digital Holidays',
+  appName: 'My Holidays',
   webDir: 'dist/public',
 
   // -------------------------------------------------------------------------
