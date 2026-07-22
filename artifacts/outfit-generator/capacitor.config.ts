@@ -15,6 +15,18 @@ const config: CapacitorConfig = {
     backgroundColor: '#F9F4EE',
     // Allow inline media playback (used for wardrobe image previews)
     allowsInlineMediaPlayback: true,
+
+    // iOS privacy-usage strings — all three are required for the camera +
+    // photo-library flow.  Missing any one causes a TCC SIGABRT crash or a
+    // silent refusal to open the picker.
+    infoPlist: {
+      NSCameraUsageDescription:
+        'My Holidays uses your camera to photograph clothing and accessories for your wardrobe.',
+      NSPhotoLibraryUsageDescription:
+        'My Holidays reads your photo library so you can add existing photos to your wardrobe.',
+      NSPhotoLibraryAddUsageDescription:
+        'My Holidays saves photos you take with the camera back to your photo library.',
+    },
   },
 
   plugins: {
