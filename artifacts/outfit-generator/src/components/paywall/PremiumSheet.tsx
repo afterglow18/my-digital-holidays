@@ -10,7 +10,15 @@ import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { useEntitlements, PurchaseResult } from "@/hooks/useEntitlements";
+import { useSubscription } from "@/lib/revenuecat";
 import type { PurchaseProduct } from "@/lib/entitlements";
+
+const PRIVACY_URL = "https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link";
+const TERMS_URL   = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+
+function openUrl(url: string) {
+  window.open(url, "_system");
+}
 
 interface Props {
   onClose: () => void;
@@ -26,6 +34,7 @@ const PRO_FEATURES = [
 
 export function PremiumSheet({ onClose }: Props) {
   const { purchase } = useEntitlements();
+  const { restore, isRestoring } = useSubscription();
   const [pending, setPending] = useState<PurchaseProduct | null>(null);
 
   const handlePurchase = useCallback(
@@ -136,6 +145,32 @@ export function PremiumSheet({ onClose }: Props) {
         >
           Maybe Later
         </button>
+
+        {/* Restore Purchases */}
+        <button
+          onClick={() => restore()}
+          disabled={isRestoring}
+          className="text-xs font-semibold text-black/40 text-center hover:text-black/60 transition-colors disabled:opacity-50"
+        >
+          {isRestoring ? "Restoring…" : "Restore Purchases"}
+        </button>
+
+        {/* Legal links */}
+        <p className="text-center text-[10px] text-black/30 leading-relaxed">
+          <button
+            onClick={() => openUrl(PRIVACY_URL)}
+            className="underline underline-offset-2 hover:text-black/50 transition-colors"
+          >
+            Privacy Policy
+          </button>
+          {" · "}
+          <button
+            onClick={() => openUrl(TERMS_URL)}
+            className="underline underline-offset-2 hover:text-black/50 transition-colors"
+          >
+            Terms of Use
+          </button>
+        </p>
       </div>
     </motion.div>
   );
