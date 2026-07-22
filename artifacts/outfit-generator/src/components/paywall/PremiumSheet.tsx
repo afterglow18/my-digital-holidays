@@ -34,21 +34,27 @@ const PRO_FEATURES = [
 
 export function PremiumSheet({ onClose }: Props) {
   const { purchase } = useEntitlements();
-  const { restore, isRestoring } = useSubscription();
+  const { restore, isRestoring, isLoading } = useSubscription();
   const [pending, setPending] = useState<PurchaseProduct | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
 
   const handlePurchase = useCallback(
     async (product: PurchaseProduct) => {
-      if (pending) return;
+      if (pending || isLoading) return;
+      setError(null);
       setPending(product);
       const result: PurchaseResult = await purchase(product);
       if (result === "success") {
         onClose();
+      } else if (result === "unavailable") {
+        setPending(null);
+        setError("Subscription products couldn't be loaded. Check your connection and try again.");
       } else {
+        // cancelled — user dismissed StoreKit sheet, no message needed
         setPending(null);
       }
     },
-    [pending, purchase, onClose],
+    [pending, isLoading, purchase, onClose],
   );
 
   return (
@@ -115,28 +121,34 @@ export function PremiumSheet({ onClose }: Props) {
         {/* Primary: Pro Stylist */}
         <button
           onClick={() => handlePurchase("premium")}
-          disabled={!!pending}
+          disabled={!!pending || isLoading}
           className="w-full py-4 rounded-xl flex items-center justify-center gap-2
                      font-display font-bold text-lg uppercase tracking-tight border-4 border-black
                      bg-black text-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
                      active:translate-x-1 active:translate-y-1 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         >
-          {pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
+          {isLoading ? "Loading…" : pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
         </button>
 
         {/* Secondary: Unlock Forever (if they just want unlimited without mannequin) */}
         <button
           onClick={() => handlePurchase("unlock")}
-          disabled={!!pending}
+          disabled={!!pending || isLoading}
           className="w-full py-3 rounded-xl flex items-center justify-center gap-1.5
                      font-display font-bold text-sm uppercase tracking-tight border-4 border-black
                      bg-primary shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
                      active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         >
-          {pending === "unlock" ? "Opening checkout…" : "Or get Unlock Forever – $4.99 (no mannequin)"}
+          {isLoading ? "Loading…" : pending === "unlock" ? "Opening checkout…" : "Or get Unlock Forever – $4.99 (no mannequin)"}
         </button>
+
+        {error && (
+          <p className="text-center text-xs font-semibold text-red-600 leading-snug px-2">
+            {error}
+          </p>
+        )}
 
         <button
           onClick={onClose}

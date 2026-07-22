@@ -10,6 +10,9 @@
 #
 # Group "build_env":
 #   VITE_API_BASE_URL                  Your deployed API URL
+#
+# REQUIRED — add as a Codemagic secret (Secure checkbox ON):
+#   VITE_REVENUECAT_IOS_KEY            RevenueCat iOS public API key (appl_…)
 
 workflows:
   ios-app-store:
@@ -27,6 +30,7 @@ workflows:
         - signing
       vars:
         VITE_API_BASE_URL: https://my-digital-holidays.replit.app/api
+        VITE_REVENUECAT_IOS_KEY: $VITE_REVENUECAT_IOS_KEY
         XCODE_SCHEME: App
         XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
         XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcodeproj/project.xcworkspace
@@ -47,7 +51,9 @@ workflows:
       - name: Build web assets
         script: |
           cd artifacts/outfit-generator
-          VITE_API_BASE_URL=$VITE_API_BASE_URL pnpm vite build --config vite.capacitor.config.ts
+          VITE_API_BASE_URL=$VITE_API_BASE_URL \
+          VITE_REVENUECAT_IOS_KEY=$VITE_REVENUECAT_IOS_KEY \
+          pnpm vite build --config vite.capacitor.config.ts
 
       - name: Capacitor add iOS and sync
         script: |
