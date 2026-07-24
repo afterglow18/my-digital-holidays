@@ -185,7 +185,7 @@ export default function AccountPage() {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 md:max-w-xl md:mx-auto">
 
         {/* ── 1. MY PLAN ──────────────────────────────────────────────────── */}
         <Card emoji="👑" title="My Plan">

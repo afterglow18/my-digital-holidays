@@ -26,6 +26,18 @@ const config: CapacitorConfig = {
         'My Holidays reads your photo library so you can add existing photos to your wardrobe.',
       NSPhotoLibraryAddUsageDescription:
         'My Holidays saves photos you take with the camera back to your photo library.',
+
+      // ── iPad support ──────────────────────────────────────────────────────
+      // UIDeviceFamily 1 = iPhone, 2 = iPad — required for App Store universal binary
+      UIDeviceFamily: [1, 2],
+
+      // Portrait + landscape for iPad
+      'UISupportedInterfaceOrientations~ipad': [
+        'UIInterfaceOrientationPortrait',
+        'UIInterfaceOrientationPortraitUpsideDown',
+        'UIInterfaceOrientationLandscapeLeft',
+        'UIInterfaceOrientationLandscapeRight',
+      ],
     },
   },
 
