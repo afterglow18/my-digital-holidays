@@ -6,8 +6,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Heart, Trash2, Save, ChevronDown,
+  X, Heart, Trash2, Save, ChevronDown, Sparkles,
 } from "lucide-react";
+import { CleanUpPhotoOverlay } from "./CleanUpPhotoOverlay";
 import {
   type ClothingItem,
   type ClothingItemUpdateCategory,
@@ -148,17 +149,23 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
 }
 
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]           = useState<FormState | null>(null);
+  const [form, setForm]                   = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCleanUp, setShowCleanUp]     = useState(false);
+  // Optimistic image URL — updated immediately on save so the screen
+  // doesn't flash back to the old photo while the DB write is in flight.
+  const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(null);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
 
-  // Reset form whenever item changes
+  // Reset form and image state whenever item changes
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
+    setShowCleanUp(false);
+    setDisplayImageUrl(null);
   }, [item?.id]);
 
   if (!item || !form) return null;
@@ -196,6 +203,23 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           onClose();
         },
       }
+    );
+  };
+
+  // Called by CleanUpPhotoOverlay when the user confirms a version.
+  // Update local state immediately (optimistic) so the photo swaps at once,
+  // then fire the DB mutation in the background — no waiting for the write.
+  const handleCleanUpSave = (chosenUrl: string) => {
+    setDisplayImageUrl(chosenUrl);
+    setShowCleanUp(false);
+    updateItem.mutate(
+      { id: item.id, data: { imageObjectPath: chosenUrl } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+        },
+      },
     );
   };
 
@@ -270,20 +294,36 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       </div>
 
-      {/* ── Photo ── */}
+      {/* ── Photo + Clean Up button ── */}
       {item.imageObjectPath && (
-        <div
-          className="w-full h-52 flex-shrink-0 border-b-2 border-black"
-          style={{
-            backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-            backgroundSize: "16px 16px",
-          }}
-        >
-          <img
-            src={getImageUrl(item.imageObjectPath)!}
-            alt={item.name}
-            className="w-full h-full object-contain"
-          />
+        <div className="flex-shrink-0 border-b-2 border-black">
+          {/* Photo area — shows optimistic URL immediately on confirm */}
+          <div
+            className="w-full h-52"
+            style={{
+              backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+              backgroundSize: "16px 16px",
+            }}
+          >
+            <img
+              src={displayImageUrl ?? getImageUrl(item.imageObjectPath)!}
+              alt={item.name}
+              className="w-full h-full object-contain"
+            />
+          </div>
+          {/* Clean Up Photo button */}
+          <div className="px-4 py-2 bg-white border-t-2 border-black/10">
+            <button
+              onClick={() => setShowCleanUp(true)}
+              className="w-full py-2 flex items-center justify-center gap-2
+                         border-2 border-black rounded-xl bg-white text-sm font-bold uppercase tracking-tight
+                         shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                         active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              Clean Up Photo
+            </button>
+          </div>
         </div>
       )}
 
@@ -408,6 +448,15 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           </div>
         )}
       </div>
+      {/* ── Clean Up Photo overlay ── */}
+      {item.imageObjectPath && (
+        <CleanUpPhotoOverlay
+          open={showCleanUp}
+          originalUrl={displayImageUrl ?? getImageUrl(item.imageObjectPath)!}
+          onClose={() => setShowCleanUp(false)}
+          onSave={handleCleanUpSave}
+        />
+      )}
     </motion.div>
   );
 }
