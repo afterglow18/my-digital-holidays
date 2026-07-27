@@ -28,17 +28,18 @@ const IMG_H = 1536;
 const NAV_H = 90;
 const PINK  = "#E8D4B0";
 
+// ── Landmark fractions (calibrated for shelf-bg.png) ─────────────────────────
 const LM = {
-  doorL: 0.182,
-  doorR: 0.776,
+  doorL: 0.07,
+  doorR: 0.93,
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215 },  // OUTFITS     (shelf 1)
+    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390 },  // BEAUTY      (shelf 2)
+    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558 },  // TOILETRIES  (shelf 3)
+    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720 },  // ESSENTIALS  (shelf 4)
   ],
-  // Action bar: from just below FRAGRANCES through the full bottom
-  barY:   0.848,
+  // Action bar: decorative base area at the bottom
+  barY:   0.810,
   barBot: 1.000,
 } as const;
 
@@ -240,12 +241,12 @@ export default function GeneratePage() {
         width: "100%",
         height: `calc(100dvh - ${NAV_H}px)`,
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#3A2210",
       }}
     >
       {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/shelf-bg.png"
         alt="My Digital Holidays"
         style={{
           position: "absolute",

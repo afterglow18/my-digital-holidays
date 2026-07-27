@@ -54,23 +54,26 @@ const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for suitcase-open-bg.jpg 989×1536) ─────────
-// Real-photo suitcase, shot from above.
-// Lid interior:  y ≈ 0.05 → 0.38   (rows 1 & 2)
-// Main body:     y ≈ 0.42 → 0.80   (rows 3 & 4)
-// doorL/doorR:   left/right inner walls of the suitcase interior
+// ── Landmark fractions (calibrated for shelf-bg.png) ─────────────────────────
+// 4 lit wooden shelves inside a holiday bookcase.
+// Garland + lights: y ≈ 0.00 → 0.13
+// Shelf 1 content:  y ≈ 0.13 → 0.30
+// Shelf 2 content:  y ≈ 0.30 → 0.47
+// Shelf 3 content:  y ≈ 0.47 → 0.63
+// Shelf 4 content:  y ≈ 0.63 → 0.79
+// Decorative base:  y ≈ 0.80 → 1.00
 const LM = {
-  doorL: 0.182,  // inner left wall
-  doorR: 0.776,  // inner right wall
+  doorL: 0.07,   // left inner wall of shelf unit
+  doorR: 0.93,   // right inner wall of shelf unit
 
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215 },  // OUTFITS     (shelf 1)
+    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390 },  // BEAUTY      (shelf 2)
+    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558 },  // TOILETRIES  (shelf 3)
+    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720 },  // ESSENTIALS  (shelf 4)
   ],
 
-  saveAreaY: 0.84,
+  saveAreaY: 0.81,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -209,12 +212,12 @@ export default function WardrobePage() {
         width: "100%",
         height: `calc(100dvh - ${NAV_H}px)`,
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#3A2210",
       }}
     >
       {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/shelf-bg.png"
         alt="My Digital Holidays"
         style={{
           position: "absolute",
