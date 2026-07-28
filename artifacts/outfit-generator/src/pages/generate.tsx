@@ -15,9 +15,11 @@ import React, {
 import {
   useListClothing, getListClothingQueryKey,
   useGenerateOutfit, useSaveOutfit, getListOutfitsQueryKey,
+  useCategoryLabels,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
-import { X } from "lucide-react";
+import { X, Pencil } from "lucide-react";
+import { RenameCategorySheet } from "@/components/clothing/RenameCategorySheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
@@ -121,6 +123,9 @@ export default function GeneratePage() {
     toiletries: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, toiletries: item ?? undefined })), []),
     essentials: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, essentials: item ?? undefined })), []),
   };
+
+  const { labels: categoryLabels, setLabel } = useCategoryLabels();
+  const [renameKey, setRenameKey] = useState<RowKey | null>(null);
 
   const generateOutfit = useGenerateOutfit();
   const saveOutfit     = useSaveOutfit();
@@ -313,13 +318,14 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const label = key.toUpperCase();
+              const label  = (categoryLabels[key] ?? key).toUpperCase();
               const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+              const iconSz = Math.max(8, pH(ir, 0.011));
 
               return (
                 <React.Fragment key={key}>
 
-                  {/* ── Category label ── */}
+                  {/* ── Category label + rename button ── */}
                   <div style={{
                     position: "absolute",
                     top: labelY,
@@ -327,8 +333,11 @@ export default function GeneratePage() {
                     width: carW,
                     transform: "translateY(-50%)",
                     zIndex: 12,
-                    textAlign: "center",
-                    pointerEvents: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    pointerEvents: "auto",
                   }}>
                     <span style={{
                       fontSize: Math.max(9, pH(ir, 0.013)),
@@ -337,9 +346,27 @@ export default function GeneratePage() {
                       color: "#3A2210",
                       fontFamily: "var(--font-display)",
                       textTransform: "uppercase",
+                      pointerEvents: "none",
                     }}>
                       {label}
                     </span>
+                    <button
+                      onClick={() => setRenameKey(key)}
+                      aria-label={`Rename ${label} shelf`}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "2px 3px",
+                        color: "#3A2210",
+                        opacity: 0.45,
+                        display: "flex",
+                        alignItems: "center",
+                        lineHeight: 1,
+                      }}
+                    >
+                      <Pencil size={iconSz} />
+                    </button>
                   </div>
 
                   {items.length > 0 ? (
@@ -664,6 +691,16 @@ export default function GeneratePage() {
           </>
         );
       })()}
+
+      {/* ── Rename category sheet ── */}
+      {renameKey && (
+        <RenameCategorySheet
+          rowKey={renameKey}
+          currentLabel={categoryLabels[renameKey] ?? renameKey}
+          onSave={(newLabel) => setLabel(renameKey, newLabel)}
+          onClose={() => setRenameKey(null)}
+        />
+      )}
     </div>
   );
 }

@@ -26,6 +26,7 @@ import {
   useListClothing, getListClothingQueryKey,
   useListOutfits, getListOutfitsQueryKey,
   useSaveOutfit,
+  useCategoryLabels,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
 import { X } from "lucide-react";
@@ -42,11 +43,11 @@ import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
 type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
-const ROWS: { key: RowKey; btnLabel: string }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS"    },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY"     },
-  { key: "toiletries", btnLabel: "+ ADD TOILETRIES" },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS" },
+const ROWS: { key: RowKey }[] = [
+  { key: "outfits"    },
+  { key: "beauty"     },
+  { key: "toiletries" },
+  { key: "essentials" },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -125,6 +126,8 @@ export default function WardrobePage() {
   const [isSaveOpen,    setIsSaveOpen]    = useState(false);
   const [saveName,      setSaveName]      = useState("");
   const [saveSuccess,   setSaveSuccess]   = useState(false);
+
+  const { labels: categoryLabels } = useCategoryLabels();
 
   const saveOutfit = useSaveOutfit();
 
@@ -287,9 +290,10 @@ export default function WardrobePage() {
           )}
 
           {/* ── 4 shelf rows ── */}
-          {ROWS.map(({ key, btnLabel }, rowIdx) => {
-            const lm      = LM.rows[rowIdx];
-            const items   = rowData[key];
+          {ROWS.map(({ key }, rowIdx) => {
+            const lm       = LM.rows[rowIdx];
+            const items    = rowData[key];
+            const btnLabel = `+ ADD ${(categoryLabels[key] ?? key).toUpperCase()}`;
 
             const secTop  = pY(ir, lm.sectionTop);
             const secH    = pH(ir, lm.shelfY - lm.sectionTop);

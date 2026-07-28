@@ -235,3 +235,31 @@ export async function setSetting(key: string, value: string): Promise<void> {
   const db = await getDB();
   await db.put("settings", { key, value });
 }
+
+// ── Category labels ───────────────────────────────────────────────────────────
+
+export const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
+  outfits:    "Outfits",
+  beauty:     "Beauty",
+  toiletries: "Toiletries",
+  essentials: "Essentials",
+};
+
+/** Returns all four labels, falling back to defaults for any that haven't been renamed. */
+export async function getCategoryLabels(): Promise<Record<string, string>> {
+  const db     = await getDB();
+  const result = { ...DEFAULT_CATEGORY_LABELS };
+  for (const key of Object.keys(DEFAULT_CATEGORY_LABELS)) {
+    const row = await db.get("settings", `category_label_${key}`);
+    if (row?.value) result[key] = row.value;
+  }
+  return result;
+}
+
+/** Persists a single label. Passing an empty string resets to the default. */
+export async function setCategoryLabel(key: string, label: string): Promise<void> {
+  const db        = await getDB();
+  const trimmed   = label.trim();
+  const persisted = trimmed || DEFAULT_CATEGORY_LABELS[key] || key;
+  await db.put("settings", { key: `category_label_${key}`, value: persisted });
+}

@@ -6,7 +6,8 @@
  * pages need only a one-line import change.
  */
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import {
   listClothing,
   getClothingItem,
@@ -21,6 +22,9 @@ import {
   deleteOutfit,
   addItemToOutfit,
   removeItemFromOutfit,
+  getCategoryLabels,
+  setCategoryLabel,
+  DEFAULT_CATEGORY_LABELS,
 } from "@/lib/localDB";
 
 export type { ClothingItem, SavedOutfit } from "@/lib/db";
@@ -172,6 +176,40 @@ export function useRemoveItemFromOutfit() {
   return useMutation<void, Error, { id: number; itemId: number }>({
     mutationFn: ({ id, itemId }) => removeItemFromOutfit(id, itemId),
   });
+}
+
+// ── Category labels ───────────────────────────────────────────────────────────
+
+export { DEFAULT_CATEGORY_LABELS };
+
+export function getCategoryLabelsQueryKey() {
+  return ["category-labels"];
+}
+
+/**
+ * Reads all four shelf labels from IndexedDB (falls back to defaults).
+ * `setLabel(key, newName)` persists and invalidates the cache so both
+ * wardrobe and generate pages re-render immediately.
+ */
+export function useCategoryLabels() {
+  const queryClient = useQueryClient();
+
+  const query = useQuery<Record<string, string>, Error>({
+    queryKey: getCategoryLabelsQueryKey(),
+    queryFn:  getCategoryLabels,
+    staleTime: Infinity,
+  });
+
+  const setLabel = useCallback(async (key: string, label: string) => {
+    await setCategoryLabel(key, label);
+    queryClient.invalidateQueries({ queryKey: getCategoryLabelsQueryKey() });
+  }, [queryClient]);
+
+  return {
+    labels:    query.data ?? DEFAULT_CATEGORY_LABELS,
+    setLabel,
+    isLoading: query.isLoading,
+  };
 }
 
 // ── Runtime value + type for ClothingItemInputCategory ────────────────────────
