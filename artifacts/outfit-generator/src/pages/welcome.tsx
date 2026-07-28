@@ -108,7 +108,7 @@ function LightSwitch({ onFlip, disabled }: { onFlip: () => void; disabled: boole
             letterSpacing: "0.18em",
             color: flipped ? "rgba(60,30,5,0.7)" : "rgba(255,255,255,0.18)",
           }}>
-            {flipped ? "ENTER" : "OFF"}
+            ENTER
           </span>
         </motion.div>
       </div>
