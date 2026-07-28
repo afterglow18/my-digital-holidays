@@ -133,17 +133,61 @@ export default function WelcomePage({ onEnter }: Props) {
         }}
       />
 
-      {/* ── Layer 4: Content — button + legal links ── */}
+      {/* ── Layer 4: Content — welcome text + button + legal links ── */}
       <div
         style={{
           position: "absolute", inset: 0,
           display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "flex-end",
-          padding: "0 32px",
-          paddingBottom: "calc(28px + env(safe-area-inset-bottom))",
+          alignItems: "center", justifyContent: "space-between",
           zIndex: 10,
+          pointerEvents: "none",
         }}
       >
+        {/* ── Welcome text (upper area) ── */}
+        <motion.div
+          animate={{ opacity: isIdle ? 1 : 0, y: isIdle ? 0 : -6 }}
+          transition={{ duration: 0.22 }}
+          style={{
+            paddingTop: "calc(14% + env(safe-area-inset-top))",
+            textAlign: "center",
+            padding: "calc(14% + env(safe-area-inset-top)) 32px 0",
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{
+            fontFamily: "var(--font-display, serif)",
+            fontWeight: 400,
+            fontSize: 13,
+            letterSpacing: "0.28em",
+            textTransform: "uppercase",
+            color: "rgba(255,235,190,0.55)",
+            marginBottom: 8,
+          }}>
+            Welcome to
+          </div>
+          <div style={{
+            fontFamily: "var(--font-display, serif)",
+            fontWeight: 800,
+            fontSize: 32,
+            letterSpacing: "0.04em",
+            lineHeight: 1.15,
+            color: "rgba(255,235,190,0.90)",
+            textShadow: "0 2px 24px rgba(255,180,80,0.25)",
+          }}>
+            My Digital<br />Holidays
+          </div>
+        </motion.div>
+
+        {/* ── Bottom: button + tap hint + legal ── */}
+        <div style={{
+          width: "100%",
+          display: "flex", flexDirection: "column",
+          alignItems: "center",
+          gap: 0,
+          padding: "0 32px",
+          paddingBottom: "calc(28px + env(safe-area-inset-bottom))",
+          pointerEvents: "none",
+        }}>
         <motion.button
           onClick={handleOpen}
           animate={{ opacity: isIdle ? 1 : 0, y: isIdle ? 0 : 8 }}
@@ -168,10 +212,33 @@ export default function WelcomePage({ onEnter }: Props) {
           Open Holidays ✨
         </motion.button>
 
+        {/* "Tap to open" hint — gentle pulse */}
+        <motion.p
+          animate={isIdle
+            ? { opacity: [0.45, 0.85, 0.45] }
+            : { opacity: 0 }
+          }
+          transition={isIdle
+            ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+            : { duration: 0.15 }
+          }
+          style={{
+            margin: "10px 0 10px",
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "rgba(255,225,170,0.75)",
+            pointerEvents: "none",
+          }}
+        >
+          Tap to open
+        </motion.p>
+
         <motion.div
           animate={{ opacity: isIdle ? 1 : 0 }}
           transition={{ duration: 0.18 }}
-          style={{ display: "flex", gap: 16, marginTop: 14 }}
+          style={{ display: "flex", gap: 16 }}
         >
           <a
             href="https://classy-alpaca-441.notion.site/Privacy-Policy-39682db6065380b19dedcb108d4a0ef4"
@@ -184,7 +251,8 @@ export default function WelcomePage({ onEnter }: Props) {
             style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.25)", textDecoration: "none", letterSpacing: "0.02em" }}
           >Support</a>
         </motion.div>
-      </div>
+        </div> {/* end bottom section */}
+      </div> {/* end Layer 4 */}
 
       {/* ── Layer 5: Exit fade — black overlay that fades in during "exiting" ── */}
       <motion.div
