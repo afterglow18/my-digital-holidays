@@ -275,37 +275,35 @@ export default function GeneratePage() {
             {/* ── Page title ── */}
             <div style={{
               position: "absolute",
-              top: pY(ir, 0.095),
+              top: pY(ir, 0.022),
               left: 8,
               right: 8,
               zIndex: 25,
               textAlign: "center",
               pointerEvents: "none",
-              overflow: "hidden",
             }}>
               <div style={{
                 fontFamily: "var(--font-display, serif)",
-                fontWeight: 900,
-                fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerH * 0.025)),
-                letterSpacing: "0.08em",
-                whiteSpace: "nowrap",
+                fontWeight: 800,
+                fontSize: Math.max(9, pW(ir, 0.032)),
+                letterSpacing: "0.20em",
                 textTransform: "uppercase",
-                color: "#1a0800",
-                lineHeight: 1.1,
+                color: "rgba(58,34,16,0.55)",
+                lineHeight: 1,
+                marginBottom: 1,
               }}>
-                MY DIGITAL HOLIDAYS
+                My Digital Holidays
               </div>
               <div style={{
                 fontFamily: "var(--font-display, serif)",
-                fontWeight: 900,
-                fontSize: Math.max(10, Math.min(pW(ir, 0.040), ir.containerH * 0.032)),
-                letterSpacing: "0.06em",
-                whiteSpace: "nowrap",
-                textTransform: "uppercase",
-                color: "#1a0800",
-                lineHeight: 1.1,
+                fontWeight: 800,
+                fontSize: Math.max(18, pW(ir, 0.068)),
+                letterSpacing: "0.04em",
+                color: "#3A2210",
+                lineHeight: 1.05,
+                textShadow: "0 1px 10px rgba(255,210,130,0.55)",
               }}>
-                MATCHMAKER
+                Matchmaker
               </div>
             </div>
 

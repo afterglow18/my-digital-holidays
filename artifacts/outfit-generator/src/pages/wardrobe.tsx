@@ -240,25 +240,35 @@ export default function WardrobePage() {
           {/* ── Page title ── */}
           <div style={{
             position: "absolute",
-            top: pY(ir, 0.090),
+            top: pY(ir, 0.022),
             left: 8,
             right: 8,
             zIndex: 25,
             textAlign: "center",
             pointerEvents: "none",
-            overflow: "hidden",
           }}>
             <div style={{
               fontFamily: "var(--font-display, serif)",
-              fontWeight: 900,
-              fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerW * 0.040)),
-              letterSpacing: "0.08em",
-              whiteSpace: "nowrap",
+              fontWeight: 800,
+              fontSize: Math.max(11, pW(ir, 0.040)),
+              letterSpacing: "0.20em",
               textTransform: "uppercase",
-              color: "#1a0800",
-              lineHeight: 1.1,
+              color: "rgba(58,34,16,0.55)",
+              lineHeight: 1,
+              marginBottom: 2,
             }}>
-              MY DIGITAL HOLIDAYS
+              My Digital
+            </div>
+            <div style={{
+              fontFamily: "var(--font-display, serif)",
+              fontWeight: 800,
+              fontSize: Math.max(22, pW(ir, 0.082)),
+              letterSpacing: "0.04em",
+              color: "#3A2210",
+              lineHeight: 1.05,
+              textShadow: "0 1px 10px rgba(255,210,130,0.55)",
+            }}>
+              Holidays
             </div>
           </div>
 

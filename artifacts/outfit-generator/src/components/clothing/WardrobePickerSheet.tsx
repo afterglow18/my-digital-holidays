@@ -2,14 +2,17 @@
  * WardrobePickerSheet
  *
  * Slide-up sheet that shows existing wardrobe items for a given category.
- * Tapping an item adds it to the outfit.  An "Add New" button at the bottom
+ * Tapping an item adds it to the outfit. An "Add New" button at the bottom
  * falls through to QuickAddSheet so the user can upload a brand-new piece.
+ *
+ * Category labels read from useCategoryLabels() so custom shelf names show here too.
  */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus } from "lucide-react";
 import {
   useListClothing,
+  useCategoryLabels,
   getListClothingQueryKey,
   type ListClothingCategory,
   type ClothingItem,
@@ -18,40 +21,43 @@ import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuickAddSheet } from "./QuickAddSheet";
 
-type Category = "outfits" | "beauty" | "toiletries" | "essentials";
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+// ── Palette (matches ItemDetailsSheet) ────────────────────────────────────────
+const C = {
+  bg:         "#FFF8F0",
+  bgCard:     "#FEFAF4",
+  brown:      "#3A2210",
+  brownFaint: "rgba(58,34,16,0.28)",
+  border:     "rgba(180,140,90,0.40)",
+  gold:       "#B8894E",
+  goldLight:  "#E8D4B0",
 };
 
+type Category = "outfits" | "beauty" | "toiletries" | "essentials";
+
 interface Props {
-  open:         boolean;
-  onOpenChange: (open: boolean) => void;
+  open:             boolean;
+  onOpenChange:     (open: boolean) => void;
   /** When omitted, shows all categories (for picking extras) */
-  category?:    Category;
-  /** Called with the chosen item so the parent can add it to the outfit */
-  onPick:       (item: ClothingItem) => void;
-  /** Items already in the outfit — shown with a checkmark but still tappable */
+  category?:        Category;
+  onPick:           (item: ClothingItem) => void;
   existingItemIds?: number[];
 }
 
 export function WardrobePickerSheet({ open, onOpenChange, category, onPick, existingItemIds = [] }: Props) {
-  const [showQuickAdd, setShowQuickAdd]         = useState(false);
+  const [showQuickAdd, setShowQuickAdd]             = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [quickAddCategory, setQuickAddCategory] = useState<Category>("outfits");
+  const [quickAddCategory, setQuickAddCategory]     = useState<Category>("outfits");
   const queryClient = useQueryClient();
+  const { labels: catLabels } = useCategoryLabels();
 
-  // When category is provided fetch that category; otherwise fetch all
   const params = category ? { category: category as ListClothingCategory } : {};
   const { data: items, isLoading } = useListClothing(
     params,
-    { query: { queryKey: getListClothingQueryKey(params), enabled: open } }
+    { query: { queryKey: getListClothingQueryKey(params), enabled: open } },
   );
 
-  const label = category ? CATEGORY_LABELS[category] : "Extra";
+  const categoryLabel = (key: Category) => catLabels[key] ?? key;
+  const label = category ? categoryLabel(category) : "Extra";
 
   const handleClose = () => onOpenChange(false);
 
@@ -63,12 +69,13 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
   const handleNewlyAdded = (item: ClothingItem) => {
     queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
     setShowQuickAdd(false);
-    // Immediately add the brand-new item to the outfit
     onPick(item);
     onOpenChange(false);
   };
 
   if (!open) return null;
+
+  const articleFor = (s: string) => /^[aeiou]/i.test(s) ? "an" : "a";
 
   return (
     <>
@@ -77,62 +84,112 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 240 }}
-        className="fixed inset-0 z-[70] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
+        style={{
+          position: "fixed", inset: 0, zIndex: 70,
+          display: "flex", flexDirection: "column",
+          maxWidth: 480, margin: "0 auto",
+          background: C.bg,
+        }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
-          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}>
-          <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-            Pick {/^[aeiou]/i.test(label) ? 'an' : 'a'} {label}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "max(0.75rem, env(safe-area-inset-top)) 16px 12px",
+          background: C.bg,
+          borderBottom: `1.5px solid ${C.border}`,
+          flexShrink: 0,
+        }}>
+          <h2 style={{
+            fontFamily: "var(--font-display, serif)",
+            fontWeight: 800, fontSize: 18,
+            letterSpacing: "0.04em", textTransform: "uppercase",
+            color: C.brown, margin: 0,
+          }}>
+            Pick {articleFor(label)} {label}
           </h2>
           <button
             onClick={handleClose}
-            className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                       bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+            style={{
+              width: 36, height: 36, borderRadius: "50%",
+              border: `1.5px solid ${C.border}`,
+              background: C.bgCard,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} color={C.brown} />
           </button>
         </div>
 
         {/* Item grid */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
           {isLoading ? (
-            <div className="flex items-center justify-center h-40">
-              <span className="text-sm text-muted-foreground animate-pulse">Loading your wardrobe…</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160 }}>
+              <span style={{ fontSize: 13, color: C.brownFaint, fontWeight: 500 }} className="animate-pulse">
+                Loading your wardrobe…
+              </span>
             </div>
           ) : items && items.length > 0 ? (
-            <div className="grid grid-cols-3 gap-3">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {items.map((item) => {
                 const alreadyIn = existingItemIds.includes(item.id);
                 return (
                   <button
                     key={item.id}
                     onClick={() => handlePick(item)}
-                    className="flex flex-col gap-1 text-left group"
+                    style={{
+                      display: "flex", flexDirection: "column", gap: 4,
+                      textAlign: "left", background: "none", border: "none",
+                      padding: 0, cursor: "pointer",
+                    }}
                   >
-                    <div className="relative w-full aspect-square border-2 border-black overflow-hidden"
-                      style={{ background: "#F5EDD8" }}>
+                    <div style={{
+                      position: "relative", width: "100%", aspectRatio: "1",
+                      border: `1.5px solid ${C.border}`,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      background: "#F5EDD8",
+                    }}>
                       {item.imageObjectPath ? (
                         <img
                           src={getImageUrl(item.imageObjectPath)!}
                           alt={item.name}
-                          className="w-full h-full object-contain transition-opacity group-active:opacity-70"
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-2xl">👕</span>
+                        <div style={{
+                          width: "100%", height: "100%",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 24,
+                        }}>
+                          👕
                         </div>
                       )}
                       {alreadyIn && (
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                          <span className="text-white text-xs font-bold uppercase tracking-wide bg-black/60 px-1.5 py-0.5 rounded">
+                        <div style={{
+                          position: "absolute", inset: 0,
+                          background: "rgba(58,34,16,0.35)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <span style={{
+                            color: C.goldLight,
+                            fontSize: 10, fontWeight: 700,
+                            letterSpacing: "0.10em", textTransform: "uppercase",
+                            background: "rgba(58,34,16,0.60)",
+                            padding: "2px 6px", borderRadius: 4,
+                          }}>
                             In look
                           </span>
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-black/60 truncate w-full">
+                    <span style={{
+                      fontSize: 10, fontWeight: 700,
+                      letterSpacing: "0.10em", textTransform: "uppercase",
+                      color: C.brownFaint,
+                      overflow: "hidden", textOverflow: "ellipsis",
+                      whiteSpace: "nowrap", display: "block", width: "100%",
+                    }}>
                       {item.name}
                     </span>
                   </button>
@@ -140,9 +197,13 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
-              <span className="text-4xl">💄</span>
-              <p className="text-sm text-muted-foreground font-medium">
+            <div style={{
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              height: 160, gap: 10, textAlign: "center",
+            }}>
+              <span style={{ fontSize: 36 }}>💄</span>
+              <p style={{ fontSize: 13, color: C.brownFaint, fontWeight: 500 }}>
                 No {label.toLowerCase()} in your wardrobe yet.
               </p>
             </div>
@@ -150,27 +211,44 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
+        <div style={{
+          padding: "12px 16px",
+          paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          borderTop: `1.5px solid ${C.border}`,
+          background: C.bg,
+          flexShrink: 0,
+        }}>
           {category ? (
-            /* Known-category mode: direct Add New button */
+            /* Known-category: direct Add New button */
             <button
               onClick={() => setShowQuickAdd(true)}
-              className="w-full flex items-center justify-center gap-2 py-3
-                         border-4 border-black rounded-2xl bg-primary font-display font-bold
-                         text-base uppercase tracking-tight
-                         shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                         active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+              style={{
+                width: "100%", padding: "13px 0",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                borderRadius: 14,
+                border: `1.5px solid ${C.gold}`,
+                background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
+                color: C.brown,
+                fontSize: 13, fontWeight: 800,
+                letterSpacing: "0.08em", textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow: "0 3px 12px rgba(120,80,40,0.20)",
+              }}
             >
-              <Plus className="w-5 h-5" />
+              <Plus size={16} />
               Add New {label} to Wardrobe
             </button>
           ) : showCategoryPicker ? (
-            /* Extras mode — category chips */
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 text-center">
+            /* Extras: category chips */
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.18em",
+                textTransform: "uppercase", color: C.brownFaint,
+                textAlign: "center", margin: 0,
+              }}>
                 Choose a category
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {(["outfits", "beauty", "toiletries", "essentials"] as Category[]).map((cat) => (
                   <button
                     key={cat}
@@ -179,27 +257,41 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                       setShowQuickAdd(true);
                       setShowCategoryPicker(false);
                     }}
-                    className="py-2.5 border-2 border-black rounded-xl bg-primary font-display font-bold
-                               text-sm uppercase tracking-tight
-                               shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                               active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                    style={{
+                      padding: "10px 0",
+                      borderRadius: 12,
+                      border: `1.5px solid ${C.border}`,
+                      background: C.bgCard,
+                      color: C.brown,
+                      fontFamily: "var(--font-display, serif)",
+                      fontSize: 13, fontWeight: 700,
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                      cursor: "pointer",
+                    }}
                   >
-                    {CATEGORY_LABELS[cat]}
+                    {categoryLabel(cat)}
                   </button>
                 ))}
               </div>
             </div>
           ) : (
-            /* Extras mode — Add New button that reveals category picker */
+            /* Extras: Add New that reveals category picker */
             <button
               onClick={() => setShowCategoryPicker(true)}
-              className="w-full flex items-center justify-center gap-2 py-3
-                         border-4 border-black rounded-2xl bg-primary font-display font-bold
-                         text-base uppercase tracking-tight
-                         shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                         active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+              style={{
+                width: "100%", padding: "13px 0",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                borderRadius: 14,
+                border: `1.5px solid ${C.gold}`,
+                background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
+                color: C.brown,
+                fontSize: 13, fontWeight: 800,
+                letterSpacing: "0.08em", textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow: "0 3px 12px rgba(120,80,40,0.20)",
+              }}
             >
-              <Plus className="w-5 h-5" />
+              <Plus size={16} />
               Add New Item to Wardrobe
             </button>
           )}

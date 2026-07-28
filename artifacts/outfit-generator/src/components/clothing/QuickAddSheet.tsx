@@ -229,30 +229,43 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
   const label = CATEGORY_LABELS[category];
 
+  // Palette tokens (matches ItemDetailsSheet / WardrobePickerSheet)
+  const C = {
+    bg: "#FFF8F0", bgCard: "#FEFAF4", brown: "#3A2210",
+    brownFaint: "rgba(58,34,16,0.28)", border: "rgba(180,140,90,0.40)",
+    gold: "#B8894E", goldLight: "#E8D4B0",
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: "100%" }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 z-[70] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
+      style={{ position: "fixed", inset: 0, zIndex: 70, display: "flex", flexDirection: "column", maxWidth: 480, margin: "0 auto", background: C.bg }}
     >
       {/* Header */}
-      <div
-        className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
-      >
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "max(0.75rem, env(safe-area-inset-top)) 16px 12px",
+        background: C.bg, borderBottom: `1.5px solid ${C.border}`, flexShrink: 0,
+      }}>
+        <h2 style={{
+          fontFamily: "var(--font-display, serif)", fontWeight: 800, fontSize: 18,
+          letterSpacing: "0.04em", textTransform: "uppercase", color: C.brown, margin: 0,
+        }}>
           {phase === "preview" ? "Choose Version" : `Add ${label}`}
         </h2>
         {(phase === "pick" || phase === "preview") && (
           <button
             onClick={handleClose}
-            className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                       bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+            style={{
+              width: 36, height: 36, borderRadius: "50%",
+              border: `1.5px solid ${C.border}`, background: C.bgCard,
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} color={C.brown} />
           </button>
         )}
       </div>
@@ -270,67 +283,100 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             )}
 
             {/* Two big action buttons */}
-            <div className="flex gap-3">
+            <div style={{ display: "flex", gap: 12 }}>
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex-1 flex flex-col items-center justify-center gap-3 py-8
-                           border-4 border-black rounded-2xl bg-primary
-                           shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                style={{
+                  flex: 1, display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 0",
+                  borderRadius: 18, border: `2px solid ${C.gold}`,
+                  background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
+                  cursor: "pointer", boxShadow: "0 4px 16px rgba(120,80,40,0.22)",
+                }}
               >
-                <span className="text-4xl leading-none">📷</span>
-                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
+                <span style={{ fontSize: 36, lineHeight: 1 }}>📷</span>
+                <span style={{
+                  fontFamily: "var(--font-display, serif)", fontWeight: 800,
+                  fontSize: 15, letterSpacing: "0.04em", textTransform: "uppercase",
+                  color: C.brown, textAlign: "center", lineHeight: 1.2,
+                }}>
                   Take<br />Photo
                 </span>
               </button>
 
               <button
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex-1 flex flex-col items-center justify-center gap-3 py-8
-                           border-4 border-black rounded-2xl bg-white
-                           shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                style={{
+                  flex: 1, display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 0",
+                  borderRadius: 18, border: `1.5px solid ${C.border}`,
+                  background: C.bgCard, cursor: "pointer",
+                  boxShadow: "0 2px 10px rgba(120,80,40,0.10)",
+                }}
               >
-                <span className="text-4xl leading-none">🖼️</span>
-                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
+                <span style={{ fontSize: 36, lineHeight: 1 }}>🖼️</span>
+                <span style={{
+                  fontFamily: "var(--font-display, serif)", fontWeight: 800,
+                  fontSize: 15, letterSpacing: "0.04em", textTransform: "uppercase",
+                  color: C.brown, textAlign: "center", lineHeight: 1.2,
+                }}>
                   Upload<br />Photo
                 </span>
               </button>
             </div>
 
             {/* Background removal notice */}
-            <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border-2 border-black/15 bg-white/60">
-              <span className="text-base leading-none mt-0.5">✨</span>
-              <p className="text-xs text-black/50 leading-snug font-medium">
+            <div style={{
+              display: "flex", alignItems: "flex-start", gap: 8,
+              padding: "10px 12px", borderRadius: 12,
+              border: `1px solid ${C.border}`, background: C.bgCard,
+            }}>
+              <span style={{ fontSize: 15, lineHeight: 1, marginTop: 1 }}>✨</span>
+              <p style={{ fontSize: 12, color: C.brownFaint, lineHeight: 1.5, fontWeight: 500, margin: 0 }}>
                 Background removal runs on-device after you pick a photo. First use downloads a ~15 MB model.
               </p>
             </div>
 
             {/* What to add */}
             {CATEGORY_EXAMPLES[category] && (
-              <div className="border-2 border-black rounded-2xl bg-white p-4
-                              shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <p className="font-display font-bold text-sm uppercase tracking-tight mb-2 flex items-center gap-2">
-                  <span>{CATEGORY_EXAMPLES[category].emoji}</span> WHAT TO ADD
+              <div style={{
+                border: `1.5px solid ${C.border}`, borderRadius: 16,
+                background: C.bgCard, padding: 16,
+              }}>
+                <p style={{
+                  fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                  fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase",
+                  color: C.brown, marginBottom: 8, display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <span>{CATEGORY_EXAMPLES[category].emoji}</span> What to Add
                 </p>
-                <p className="text-sm text-black/70 leading-snug">
+                <p style={{ fontSize: 13, color: C.brownFaint, lineHeight: 1.5, margin: 0 }}>
                   {CATEGORY_EXAMPLES[category].items.join(", ")}
                 </p>
               </div>
             )}
 
             {/* Photo tips */}
-            <div className="border-2 border-black rounded-2xl bg-white p-4
-                            shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-              <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
-                <span>📸</span> PHOTO TIPS
+            <div style={{
+              border: `1.5px solid ${C.border}`, borderRadius: 16,
+              background: C.bgCard, padding: 16,
+            }}>
+              <p style={{
+                fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase",
+                color: C.brown, marginBottom: 12, display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <span>📸</span> Photo Tips
               </p>
-              <ul className="flex flex-col gap-2">
+              <ul style={{ display: "flex", flexDirection: "column", gap: 8, margin: 0, padding: 0, listStyle: "none" }}>
                 {PHOTO_TIPS.map((tip) => (
-                  <li key={tip} className="flex items-start gap-2 text-sm text-black/70 leading-snug">
-                    <span className="mt-0.5 w-4 h-4 border-2 border-black rounded-sm bg-primary
-                                     flex items-center justify-center flex-shrink-0">
-                      <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                  <li key={tip} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: C.brownFaint, lineHeight: 1.4 }}>
+                    <span style={{
+                      marginTop: 1, width: 16, height: 16, flexShrink: 0,
+                      border: `1.5px solid ${C.border}`, borderRadius: 4,
+                      background: C.bgCard, display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <Check size={9} strokeWidth={3} color={C.gold} />
                     </span>
                     {tip}
                   </li>
@@ -342,15 +388,18 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
         {/* ── ENCODING — full-screen spinner, shown immediately after photo is picked ── */}
         {phase === "encoding" && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
-            <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
-                            flex items-center justify-center
-                            shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: 24 }}>
+            <div style={{
+              width: 100, height: 100, borderRadius: 24,
+              border: `1.5px solid ${C.border}`, background: C.bgCard,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 20px rgba(120,80,40,0.12)",
+            }}>
+              <Loader2 size={44} strokeWidth={1.5} color={C.gold} className="animate-spin" />
             </div>
-            <div className="text-center">
-              <p className="font-display font-bold text-2xl uppercase tracking-tight">Processing…</p>
-              <p className="text-sm text-muted-foreground mt-1">Getting your photo ready.</p>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--font-display, serif)", fontWeight: 800, fontSize: 22, letterSpacing: "0.04em", textTransform: "uppercase", color: C.brown, margin: 0 }}>Processing…</p>
+              <p style={{ fontSize: 13, color: C.brownFaint, marginTop: 6 }}>Getting your photo ready.</p>
             </div>
           </div>
         )}
@@ -374,34 +423,37 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             </p>
 
             {/* Side-by-side cards */}
-            <div className="flex gap-3">
+            <div style={{ display: "flex", gap: 12 }}>
               {/* Original card */}
               <button
                 onClick={() => setSelected("original")}
-                className="flex-1 rounded-2xl overflow-hidden border-[3px] transition-all"
                 style={{
-                  borderColor: selected === "original" ? "#000" : "rgba(0,0,0,0.18)",
-                  boxShadow: selected === "original" ? "4px 4px 0px 0px rgba(0,0,0,1)" : "none",
-                  background: "none",
-                  padding: 0,
+                  flex: 1, borderRadius: 16, overflow: "hidden",
+                  border: `2px solid ${selected === "original" ? C.gold : C.border}`,
+                  boxShadow: selected === "original" ? `0 3px 12px rgba(120,80,40,0.25)` : "none",
+                  background: "none", padding: 0, cursor: "pointer",
                 }}
               >
-                <div className="relative bg-black" style={{ minHeight: 180 }}>
-                  <img
-                    src={originalUrl!}
-                    alt="Original"
-                    style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }}
-                  />
+                <div style={{ position: "relative", background: "#222", minHeight: 180 }}>
+                  <img src={originalUrl!} alt="Original" style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }} />
                   {selected === "original" && (
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black
-                                    flex items-center justify-center border-2 border-white">
-                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    <div style={{
+                      position: "absolute", top: 8, right: 8,
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: C.gold, border: `2px solid #fff`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <Check size={11} strokeWidth={3} color="#fff" />
                     </div>
                   )}
                 </div>
-                <p className="text-center font-display font-bold text-[11px] uppercase tracking-wide
-                               py-2 border-t-[3px]"
-                   style={{ borderColor: selected === "original" ? "#000" : "rgba(0,0,0,0.18)" }}>
+                <p style={{
+                  textAlign: "center", fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                  fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
+                  padding: "7px 0", margin: 0,
+                  borderTop: `1.5px solid ${selected === "original" ? C.gold : C.border}`,
+                  color: selected === "original" ? C.brown : "rgba(58,34,16,0.45)",
+                }}>
                   Original
                 </p>
               </button>
@@ -410,82 +462,88 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <button
                 onClick={() => cleanedUrl && setSelected("cleaned")}
                 disabled={!cleanedUrl}
-                className="flex-1 rounded-2xl overflow-hidden border-[3px] transition-all"
                 style={{
-                  borderColor: selected === "cleaned" && cleanedUrl ? "#000" : "rgba(0,0,0,0.18)",
-                  boxShadow: selected === "cleaned" && cleanedUrl ? "4px 4px 0px 0px rgba(0,0,0,1)" : "none",
-                  background: "none",
-                  padding: 0,
-                  opacity: cleanedUrl ? 1 : 0.65,
+                  flex: 1, borderRadius: 16, overflow: "hidden",
+                  border: `2px solid ${selected === "cleaned" && cleanedUrl ? C.gold : C.border}`,
+                  boxShadow: selected === "cleaned" && cleanedUrl ? `0 3px 12px rgba(120,80,40,0.25)` : "none",
+                  background: "none", padding: 0,
+                  opacity: cleanedUrl ? 1 : 0.65, cursor: cleanedUrl ? "pointer" : "default",
                 }}
               >
-                {/* Checkerboard reveals transparency */}
-                <div
-                  style={{
-                    background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px",
-                    minHeight: 180,
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <div style={{
+                  background: "repeating-conic-gradient(#e8e0d5 0% 25%, #f5f0ea 0% 50%) 0 0 / 12px 12px",
+                  minHeight: 180, position: "relative",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
                   {cleanedUrl ? (
                     <>
-                      <img
-                        src={cleanedUrl}
-                        alt="Background removed"
-                        style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }}
-                      />
+                      <img src={cleanedUrl} alt="Background removed" style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }} />
                       {selected === "cleaned" && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black
-                                        flex items-center justify-center border-2 border-white">
-                          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                        <div style={{
+                          position: "absolute", top: 8, right: 8,
+                          width: 22, height: 22, borderRadius: "50%",
+                          background: C.gold, border: `2px solid #fff`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <Check size={11} strokeWidth={3} color="#fff" />
                         </div>
                       )}
                     </>
                   ) : bgFailed ? (
-                    <p className="text-[11px] font-bold uppercase text-black/40 text-center px-3">
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "rgba(58,34,16,0.35)", textAlign: "center", padding: "0 12px" }}>
                       Could not remove background
                     </p>
                   ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="w-8 h-8 animate-spin opacity-40" />
-                      <p className="text-[11px] font-bold uppercase text-black/40">Processing</p>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                      <Loader2 size={28} strokeWidth={1.5} color={C.gold} className="animate-spin" />
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "rgba(58,34,16,0.35)" }}>Processing</p>
                     </div>
                   )}
                 </div>
-                <p className="text-center font-display font-bold text-[11px] uppercase tracking-wide
-                               py-2 border-t-[3px]"
-                   style={{ borderColor: selected === "cleaned" && cleanedUrl ? "#000" : "rgba(0,0,0,0.18)" }}>
+                <p style={{
+                  textAlign: "center", fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                  fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
+                  padding: "7px 0", margin: 0,
+                  borderTop: `1.5px solid ${selected === "cleaned" && cleanedUrl ? C.gold : C.border}`,
+                  color: selected === "cleaned" && cleanedUrl ? C.brown : "rgba(58,34,16,0.45)",
+                }}>
                   Cleaned ✨
                 </p>
               </button>
             </div>
 
             {/* Action row */}
-            <div className="flex gap-3 mt-1">
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button
                 onClick={() => setPhase("pick")}
-                className="flex items-center justify-center gap-1.5 px-5 py-3
-                           border-[3px] border-black rounded-xl bg-white font-display font-bold
-                           text-sm uppercase tracking-tight
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "11px 18px", borderRadius: 12,
+                  border: `1.5px solid ${C.border}`, background: C.bgCard,
+                  fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                  fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", color: C.brown,
+                  cursor: "pointer",
+                }}
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw size={14} />
                 Retake
               </button>
 
               <button
                 onClick={handleSave}
                 disabled={selected === "cleaned" && !cleanedUrl}
-                className="flex-1 py-3 border-[3px] border-black rounded-xl bg-primary font-display font-bold
-                           text-sm uppercase tracking-tight text-black
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
-                           disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-                style={{ boxShadow: (selected === "cleaned" && !cleanedUrl) ? "none" : "3px 3px 0px 0px rgba(0,0,0,1)" }}
+                style={{
+                  flex: 1, padding: "11px 0", borderRadius: 12,
+                  border: `1.5px solid ${C.gold}`,
+                  background: (selected === "cleaned" && !cleanedUrl)
+                    ? C.goldLight
+                    : `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
+                  fontFamily: "var(--font-display, serif)", fontWeight: 800,
+                  fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", color: C.brown,
+                  cursor: (selected === "cleaned" && !cleanedUrl) ? "not-allowed" : "pointer",
+                  opacity: (selected === "cleaned" && !cleanedUrl) ? 0.6 : 1,
+                  boxShadow: "0 3px 12px rgba(120,80,40,0.20)",
+                }}
               >
                 {selected === "cleaned" && !cleanedUrl
                   ? "Processing…"
@@ -499,15 +557,18 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
         {/* ── UPLOADING ── */}
         {phase === "uploading" && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
-            <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
-                            flex items-center justify-center
-                            shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: 24 }}>
+            <div style={{
+              width: 100, height: 100, borderRadius: 24,
+              border: `1.5px solid ${C.border}`, background: C.bgCard,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 20px rgba(120,80,40,0.12)",
+            }}>
+              <Loader2 size={44} strokeWidth={1.5} color={C.gold} className="animate-spin" />
             </div>
-            <div className="text-center">
-              <p className="font-display font-bold text-2xl uppercase tracking-tight">Saving…</p>
-              <p className="text-sm text-muted-foreground mt-1">Adding to your wardrobe.</p>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--font-display, serif)", fontWeight: 800, fontSize: 22, letterSpacing: "0.04em", textTransform: "uppercase", color: C.brown, margin: 0 }}>Saving…</p>
+              <p style={{ fontSize: 13, color: C.brownFaint, marginTop: 6 }}>Adding to your wardrobe.</p>
             </div>
           </div>
         )}
