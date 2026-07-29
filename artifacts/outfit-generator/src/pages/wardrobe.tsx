@@ -69,10 +69,11 @@ const LM = {
 
   rows: [
     // ⚠️ labelFrac values are PINNED — approved by design, do not adjust
-    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },  // shelf 1
-    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.82 },  // shelf 2
-    { sectionTop: 0.486, shelfY: 0.636, btnCY: 0.559, labelFrac: 1.35 },  // shelf 3
-    { sectionTop: 0.651, shelfY: 0.796, btnCY: 0.721, labelFrac: 1.83 },  // shelf 4
+    // ⚠️ pinnedLabelY (rows 3+4) is PINNED — heading position locked, do not adjust
+    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },                          // shelf 1
+    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.82 },                          // shelf 2
+    { sectionTop: 0.486, shelfY: 0.636, btnCY: 0.559, labelFrac: 1.35, pinnedLabelY: 0.460 },     // shelf 3
+    { sectionTop: 0.651, shelfY: 0.796, btnCY: 0.721, labelFrac: 1.83, pinnedLabelY: 0.593 },     // shelf 4
   ],
 
   saveAreaY: 0.81,
@@ -203,7 +204,7 @@ export default function WardrobePage() {
   // ── Section layout helpers ────────────────────────────────────────────────
   // Label Y as a fraction for each row (used to pin carousel bounds)
   const labelYFracs = LM.rows.map(lm =>
-    lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac
+    "pinnedLabelY" in lm ? lm.pinnedLabelY : lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac
   );
   const LABEL_GAP_BELOW = 0.018;  // gap below label → carousel top
   const LABEL_GAP_ABOVE = 0.008;  // gap above next label → carousel bottom
@@ -322,7 +323,7 @@ export default function WardrobePage() {
             const btnCY   = pY(ir, lm.btnCY);
             const btnH    = Math.max(32, pH(ir, 0.045));
 
-            const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac);
+            const labelY = pY(ir, "pinnedLabelY" in lm ? lm.pinnedLabelY : lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac);
 
             return (
               <React.Fragment key={key}>
