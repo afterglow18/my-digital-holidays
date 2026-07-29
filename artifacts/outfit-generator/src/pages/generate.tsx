@@ -296,6 +296,22 @@ export default function GeneratePage() {
               }}>
                 My Digital Holidays
               </div>
+              <div style={{
+                fontFamily: "var(--font-display, serif)",
+                fontWeight: 800,
+                fontSize: Math.max(11, pW(ir, 0.042)),
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: "rgba(255,245,238,0.90)",
+                lineHeight: 1,
+                marginTop: 3,
+                textShadow:
+                  "0 0 8px rgba(255,245,238,0.80), " +
+                  "0 0 18px rgba(255,220,180,0.55), " +
+                  "0 1px 4px rgba(0,0,0,0.50)",
+              }}>
+                Matchmaker
+              </div>
             </div>
 
             {/* ── 4 shelf carousels + ADD-button covers ── */}
