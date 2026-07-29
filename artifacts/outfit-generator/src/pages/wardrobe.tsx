@@ -207,7 +207,7 @@ export default function WardrobePage() {
     "pinnedLabelY" in lm ? lm.pinnedLabelY : lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac
   );
   const LABEL_GAP_BELOW = 0.018;       // gap below label → carousel top (rows 1–2)
-  const LABEL_GAP_BELOW_LOWER = 0.010; // tighter gap for rows 3–4
+  const LABEL_GAP_BELOW_LOWER = 0.014; // tighter gap for rows 3–4
   const LABEL_GAP_ABOVE = 0.008;       // gap above next label → carousel bottom
 
   return (
