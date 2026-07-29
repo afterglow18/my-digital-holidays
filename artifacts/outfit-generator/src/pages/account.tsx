@@ -63,9 +63,10 @@ function YellowButton({
       disabled={!!pending}
       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
                  border-[3px] border-[#8B1A1A] font-display font-bold text-sm uppercase
-                 tracking-tight bg-primary text-[#FFF5EE]
+                 tracking-tight text-[#FFF5EE]
                  active:translate-x-0.5 active:translate-y-0.5 transition-all
                  disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{ background: "linear-gradient(160deg, #B52020 0%, #8B1A1A 100%)" }}
     >
       {pending ? (
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -156,13 +157,42 @@ export default function AccountPage() {
   return (
     <>
     <div
-      className="min-h-full flex flex-col px-4 pb-10"
-      style={{ paddingTop: "max(2rem, env(safe-area-inset-top))", background: "#F5F0E8" }}
+      className="min-h-full flex flex-col pb-10"
+      style={{ background: "#F5F0E8" }}
     >
-      {/* Page title */}
-      <header className="mb-5">
-        <h1 className="font-display font-bold text-4xl uppercase tracking-tighter leading-none">
-          My Digital<br />Holidays
+      {/* ── Holiday red header band ── */}
+      <header
+        className="px-5 pb-5 mb-5"
+        style={{
+          background: "linear-gradient(160deg, #8B1A1A 0%, #6B1010 100%)",
+          paddingTop: "max(2rem, env(safe-area-inset-top))",
+        }}
+      >
+        <div style={{
+          fontFamily: "var(--font-display, serif)",
+          fontWeight: 800,
+          fontSize: 11,
+          letterSpacing: "0.20em",
+          textTransform: "uppercase",
+          color: "rgba(255,245,238,0.65)",
+          lineHeight: 1,
+          marginBottom: 4,
+          textShadow: "0 1px 6px rgba(0,0,0,0.40)",
+        }}>
+          My Digital Holidays
+        </div>
+        <h1 style={{
+          fontFamily: "var(--font-display, serif)",
+          fontWeight: 800,
+          fontSize: 34,
+          letterSpacing: "0.03em",
+          color: "#FFF5EE",
+          lineHeight: 1.05,
+          textShadow: "0 2px 12px rgba(0,0,0,0.50)",
+          margin: 0,
+          textTransform: "uppercase",
+        }}>
+          Account & Settings
         </h1>
       </header>
 
@@ -185,7 +215,7 @@ export default function AccountPage() {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col gap-4 md:max-w-xl md:mx-auto">
+      <div className="flex flex-col gap-4 px-4 md:max-w-xl md:mx-auto">
 
         {/* ── 1. MY PLAN ──────────────────────────────────────────────────── */}
         <Card emoji="👑" title="My Plan">
