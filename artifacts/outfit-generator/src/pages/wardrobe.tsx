@@ -310,9 +310,11 @@ export default function WardrobePage() {
             const carLeft    = pX(ir, LM.doorL);
             const carW       = pW(ir, LM.doorR - LM.doorL);
             const carTopFrac = labelYFracs[rowIdx] + LABEL_GAP_BELOW;
-            const carBotFrac = rowIdx < LM.rows.length - 1
+            // Shelf 4 (Storage): trim the bottom so the carousel doesn't overflow the shelf
+            const rawCarBotFrac = rowIdx < LM.rows.length - 1
               ? labelYFracs[rowIdx + 1] - LABEL_GAP_ABOVE
               : lm.shelfY;
+            const carBotFrac = rowIdx === 3 ? rawCarBotFrac - 0.07 : rawCarBotFrac;
             const carTop = pY(ir, carTopFrac);
             const carH   = Math.max(0, pH(ir, carBotFrac - carTopFrac));
 
