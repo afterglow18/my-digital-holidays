@@ -473,9 +473,9 @@ export default function SavedPage() {
           >
             <Bookmark className="w-7 h-7" style={{ color: "#FFF5EE" }} />
           </div>
-          <h3 className="font-display font-bold text-xl mb-2">No looks saved yet.</h3>
+          <h3 className="font-display font-bold text-xl mb-2">No sets saved yet.</h3>
           <p className="text-sm font-medium text-muted-foreground">
-            Head to the Holidays tab, spin the slots, and save looks you love. ❤️
+            Arrange items in the Holidays tab, or spin a combo in the Generate tab, then save your sets. ❤️
           </p>
         </div>
       )}
