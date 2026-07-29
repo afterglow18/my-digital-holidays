@@ -67,7 +67,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
       const measure = () => {
         const el = containerRef.current;
         if (!el) return;
-        setSlotW(el.clientWidth / 3);
+        setSlotW(el.clientWidth / 3.5);
         setContH(el.clientHeight);
       };
       measure();
@@ -192,9 +192,9 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
     }, [centredIdx, onItemTap]);
 
     // ── Geometry ──────────────────────────────────────────────────────────────
-    const baseX  = (1 - centredIdx) * slotW;
+    const baseX  = (1.25 - centredIdx) * slotW; // offset for 3.5-slot viewport (containerCX = slotW * 1.75)
     const stripX = baseX + dragX;
-    const containerCX = slotW * 1.5; // visual center of the 3-slot viewport
+    const containerCX = slotW * 1.75; // visual center of the 3.5-slot viewport
 
     // Items beyond ±1.65 slots from center are culled
     const isVisible = (i: number) => {
@@ -287,8 +287,8 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
               const p = Math.max(0, Math.min(1, 1 - distSlots));
               scale   = SCALE_SIDE  + (SCALE_CTR   - SCALE_SIDE)   * p;
               opacity = OPACITY_SIDE + (1           - OPACITY_SIDE) * p;
-              bg      = `rgba(205,178,140,${(p * 0.90).toFixed(3)})`;
-              shadow  = p > 0.05
+              bg      = isCenter ? `rgba(205,178,140,${(p * 0.90).toFixed(3)})` : "transparent";
+              shadow  = isCenter && p > 0.05
                 ? `0 0 ${(14 * p).toFixed(1)}px ${(5 * p).toFixed(1)}px rgba(160,20,20,${(0.38 * p).toFixed(3)}), 0 ${(4 * p).toFixed(1)}px ${(16 * p).toFixed(1)}px rgba(80,50,20,${(0.22 * p).toFixed(3)})`
                 : "none";
             }

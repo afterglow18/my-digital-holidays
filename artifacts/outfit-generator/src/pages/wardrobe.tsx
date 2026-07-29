@@ -244,7 +244,7 @@ export default function WardrobePage() {
           {/* ── Page title ── */}
           <div style={{
             position: "absolute",
-            top: pY(ir, 0.022),
+            top: pY(ir, 0.042),
             left: 8,
             right: 8,
             zIndex: 25,
@@ -252,28 +252,14 @@ export default function WardrobePage() {
             pointerEvents: "none",
           }}>
             <div style={{
-              fontFamily: "var(--font-display, serif)",
-              fontWeight: 800,
-              fontSize: Math.max(11, pW(ir, 0.040)),
-              letterSpacing: "0.20em",
-              textTransform: "uppercase",
-              color: "rgba(255,245,238,0.65)",
-              lineHeight: 1,
-              marginBottom: 2,
-              textShadow: "0 1px 6px rgba(0,0,0,0.40)",
-            }}>
-              My Digital
-            </div>
-            <div style={{
-              fontFamily: "var(--font-display, serif)",
-              fontWeight: 800,
-              fontSize: Math.max(22, pW(ir, 0.082)),
-              letterSpacing: "0.04em",
+              fontFamily: "'Dancing Script', cursive",
+              fontWeight: 700,
+              fontSize: Math.max(20, pW(ir, 0.082)),
               color: "#FFF5EE",
               lineHeight: 1.05,
-              textShadow: "0 2px 12px rgba(0,0,0,0.50)",
+              textShadow: "0 2px 14px rgba(0,0,0,0.55)",
             }}>
-              Holidays
+              My Digital Holidays
             </div>
           </div>
 
@@ -285,7 +271,7 @@ export default function WardrobePage() {
               aria-label={`${totalItems} of ${FREE_ITEM_LIMIT} items used — tap to upgrade`}
               style={{
                 position: "absolute",
-                top: pY(ir, 0.108), left: "50%", transform: "translateX(-50%)",
+                top: pY(ir, 0.142), left: "50%", transform: "translateX(-50%)",
                 zIndex: 25,
                 padding: "3px 14px", borderRadius: 20, border: "none",
                 background: totalItems >= FREE_ITEM_LIMIT

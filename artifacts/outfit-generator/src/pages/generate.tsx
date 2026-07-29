@@ -36,10 +36,11 @@ const LM = {
   doorR: 0.93,
   rows: [
     // ⚠️ labelFrac values are PINNED — approved by design, do not adjust
-    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },  // shelf 1
-    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.82 },  // shelf 2
-    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558, labelFrac: 1.35 },  // shelf 3
-    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720, labelFrac: 1.83 },  // shelf 4
+    // ⚠️ pinnedLabelY (rows 3+4) is PINNED — heading position locked, do not adjust
+    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },                          // shelf 1
+    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.82 },                          // shelf 2
+    { sectionTop: 0.486, shelfY: 0.636, btnCY: 0.559, labelFrac: 1.35, pinnedLabelY: 0.460 },     // shelf 3
+    { sectionTop: 0.651, shelfY: 0.796, btnCY: 0.721, labelFrac: 1.83, pinnedLabelY: 0.593 },     // shelf 4
   ],
   // Action bar: decorative base area at the bottom
   barY:   0.810,
@@ -233,10 +234,15 @@ export default function GeneratePage() {
 
   const canSave = Object.keys(centred).length > 0;
 
-  // ── Section layout helpers — per-row, same as wardrobe.tsx ──────────────
-  const sectionHeights = ready
-    ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
-    : LM.rows.map(() => 0);
+  // ── Section layout helpers — mirrors wardrobe.tsx exactly ───────────────
+  const LABEL_GAP_BELOW       = 0.018;
+  const LABEL_GAP_BELOW_LOWER = 0.014;
+  const LABEL_GAP_BELOW_ROW4  = 0.012;
+  const LABEL_GAP_ABOVE       = 0.008;
+
+  const labelYFracs = LM.rows.map(lm =>
+    "pinnedLabelY" in lm ? lm.pinnedLabelY : lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac
+  );
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -268,15 +274,12 @@ export default function GeneratePage() {
       />
 
       {ready && (() => {
-        const carLeft = pX(ir, LM.doorL);
-        const carW    = pW(ir, LM.doorR - LM.doorL);
-
         return (
           <>
             {/* ── Page title ── */}
             <div style={{
               position: "absolute",
-              top: pY(ir, 0.022),
+              top: pY(ir, 0.042),
               left: 8,
               right: 8,
               zIndex: 25,
@@ -284,28 +287,14 @@ export default function GeneratePage() {
               pointerEvents: "none",
             }}>
               <div style={{
-                fontFamily: "var(--font-display, serif)",
-                fontWeight: 800,
-                fontSize: Math.max(9, pW(ir, 0.032)),
-                letterSpacing: "0.20em",
-                textTransform: "uppercase",
-                color: "rgba(255,245,238,0.65)",
-                lineHeight: 1,
-                marginBottom: 1,
-                textShadow: "0 1px 6px rgba(0,0,0,0.40)",
-              }}>
-                My Digital Holidays
-              </div>
-              <div style={{
-                fontFamily: "var(--font-display, serif)",
-                fontWeight: 800,
-                fontSize: Math.max(18, pW(ir, 0.068)),
-                letterSpacing: "0.04em",
+                fontFamily: "'Dancing Script', cursive",
+                fontWeight: 700,
+                fontSize: Math.max(20, pW(ir, 0.082)),
                 color: "#FFF5EE",
                 lineHeight: 1.05,
-                textShadow: "0 2px 12px rgba(0,0,0,0.50)",
+                textShadow: "0 2px 14px rgba(0,0,0,0.55)",
               }}>
-                Matchmaker
+                My Digital Holidays
               </div>
             </div>
 
@@ -313,13 +302,20 @@ export default function GeneratePage() {
             {ROWS.map(({ key }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { outfits, beauty, toiletries, essentials }[key];
-              const secTop = pY(ir, lm.sectionTop);
-              const secH   = pH(ir, lm.shelfY - lm.sectionTop);
-              const btnCY  = pY(ir, lm.btnCY);
-              const btnH   = Math.max(32, pH(ir, 0.045));
+
+              const carLeft = pX(ir, LM.doorL);
+              const carW    = pW(ir, LM.doorR - LM.doorL);
+
+              const carTopFrac = labelYFracs[rowIdx] + (rowIdx === 3 ? LABEL_GAP_BELOW_ROW4 : rowIdx === 2 ? LABEL_GAP_BELOW_LOWER : LABEL_GAP_BELOW);
+              const rawCarBotFrac = rowIdx < LM.rows.length - 1
+                ? labelYFracs[rowIdx + 1] - LABEL_GAP_ABOVE
+                : lm.shelfY;
+              const carBotFrac = rowIdx === 3 ? rawCarBotFrac - 0.07 : rawCarBotFrac;
+              const carTop = pY(ir, carTopFrac);
+              const carH   = Math.max(0, pH(ir, carBotFrac - carTopFrac));
 
               const label  = (categoryLabels[key] ?? key).toUpperCase();
-              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac);
+              const labelY = pY(ir, "pinnedLabelY" in lm ? lm.pinnedLabelY : lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac);
               const iconSz = Math.max(8, pH(ir, 0.011));
 
               return (
@@ -374,22 +370,22 @@ export default function GeneratePage() {
                     <div
                       style={{
                         position: "absolute",
-                        top: secTop, left: carLeft, width: carW, height: secH,
-                        zIndex: 10, overflow: "visible",
+                        top: carTop, left: carLeft, width: carW, height: carH,
+                        zIndex: 10, overflow: "hidden",
                       }}
                     >
                       <ClosetRow
                         ref={rowRefs[key]}
                         items={items}
                         onCenteredItem={setCentredHandlers[key]}
-                        maxPhotoH={Math.max(0, sectionHeights[rowIdx] - 4)}
+                        maxPhotoH={Math.max(1, carH - 4)}
                         disableSwipe
                       />
                     </div>
                   ) : (
                     <div style={{
                       position: "absolute",
-                      top: secTop, left: carLeft, width: carW, height: secH,
+                      top: carTop, left: carLeft, width: carW, height: carH,
                       zIndex: 10,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
