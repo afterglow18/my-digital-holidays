@@ -32,7 +32,7 @@ import React, {
 const SCALE_CTR   = 1.12;            // center card is 12% larger
 const SCALE_SIDE  = 0.88;            // side cards are 88% of center
 const OPACITY_SIDE = 0.72;           // side cards fade to 72%
-const BG_CENTER   = "rgba(42,18,6,0.88)";   // dark brown card for selected item
+const BG_CENTER   = "rgba(255,240,235,0.88)";  // off-white with red tint card
 const SHADOW_CTR  = "0 4px 18px rgba(0,0,0,0.40), 0 1px 4px rgba(0,0,0,0.20)";
 import { type ClothingItem } from "@/hooks/useLocalDB";
 import { getImageUrl } from "@/lib/utils";
