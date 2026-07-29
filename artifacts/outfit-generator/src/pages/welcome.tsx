@@ -268,13 +268,14 @@ export default function WelcomePage({ onEnter }: Props) {
             Welcome to
           </div>
           <div style={{
-            fontFamily: "var(--font-display, serif)",
-            fontWeight: 800, fontSize: 32,
-            letterSpacing: "0.04em", lineHeight: 1.15,
-            color: "rgba(255,235,190,0.90)",
-            textShadow: "0 2px 24px rgba(255,180,80,0.25)",
+            fontFamily: "'Dancing Script', cursive",
+            fontWeight: 700,
+            fontSize: 58,
+            lineHeight: 1.1,
+            color: "#8B1A1A",
+            textShadow: "0 0 32px rgba(255,180,80,0.40), 0 2px 12px rgba(0,0,0,0.60)",
           }}>
-            My Digital<br />Holidays
+            My Digital Holidays
           </div>
         </motion.div>
 
