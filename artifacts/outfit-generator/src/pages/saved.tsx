@@ -6,6 +6,7 @@ import {
   useAddItemToOutfit,
   useRemoveItemFromOutfit,
   getListOutfitsQueryKey,
+  useCategoryLabels,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
 import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
@@ -71,6 +72,7 @@ export default function SavedPage() {
   const addItemToOutfit = useAddItemToOutfit();
   const queryClient = useQueryClient();
   const { tier } = useEntitlements();
+  const categoryLabels = useCategoryLabels();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [replacingSlot, setReplacingSlot] = useState<{ outfitId: number; category: SlotKey } | null>(null);
   const [addingExtra, setAddingExtra]     = useState<number | null>(null);
@@ -162,9 +164,9 @@ export default function SavedPage() {
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
       <header className="mb-6">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
+        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">🎄 Lookbook</h1>
         <div className="flex items-center justify-between">
-          <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
+          <p className="font-medium text-muted-foreground text-sm">Your saved holiday looks.</p>
 
           {isFree && outfitCount > 0 && (
             <button
@@ -174,7 +176,7 @@ export default function SavedPage() {
                           ${atLimit
                             ? "bg-black text-white border-black"
                             : outfitCount >= FREE_OUTFIT_LIMIT - 1
-                            ? "bg-primary border-black text-black"
+                            ? "bg-primary border-[#8B1A1A] text-[#FFF5EE]"
                             : "bg-white border-black/20 text-black/40 hover:border-black/40"
                           }`}
             >
@@ -243,7 +245,7 @@ export default function SavedPage() {
                 data-testid={`outfit-card-${outfit.id}`}
               >
                 {/* Card header */}
-                <div className="px-4 py-3 border-b-2 border-black flex justify-between items-center bg-primary gap-2">
+                <div className="px-4 py-3 border-b-2 border-[#8B1A1A] flex justify-between items-center bg-primary gap-2">
                   {renamingId === outfit.id ? (
                     <form
                       className="flex-1 flex items-center gap-1"
@@ -266,8 +268,8 @@ export default function SavedPage() {
                       onClick={() => startRename(outfit.id, outfit.name)}
                       className="flex-1 flex items-center gap-1.5 text-left group min-w-0"
                     >
-                      <h3 className="font-display font-bold text-lg uppercase tracking-tight truncate">{outfit.name}</h3>
-                      <Pencil className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-50 transition-opacity" />
+                      <h3 className="font-display font-bold text-lg uppercase tracking-tight truncate text-[#FFF5EE]">{outfit.name}</h3>
+                      <Pencil className="w-3 h-3 shrink-0 text-[#FFF5EE] opacity-0 group-hover:opacity-50 transition-opacity" />
                     </button>
                   )}
                   <button
@@ -326,7 +328,7 @@ export default function SavedPage() {
                               <ItemPhoto item={item} size="lg" onClick={() => setDetailsItem(item)} />
                               <div className="flex items-center justify-between px-0.5">
                                 <span className="text-[8px] font-bold uppercase text-muted-foreground truncate">
-                                  {SLOT_LABELS[slot]}
+                                  {(categoryLabels[slot] ?? SLOT_LABELS[slot])}
                                 </span>
                                 <button
                                   onClick={() => handleRemoveItem(outfit.id, item.id)}
@@ -345,7 +347,7 @@ export default function SavedPage() {
                                 <Plus className="w-3.5 h-3.5 text-black/30" />
                               </button>
                               <span className="text-[8px] font-bold uppercase text-black/25 text-center truncate">
-                                {SLOT_LABELS[slot]}
+                                {(categoryLabels[slot] ?? SLOT_LABELS[slot])}
                               </span>
                             </>
                           )}
@@ -410,13 +412,14 @@ export default function SavedPage() {
           })}
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl mt-8">
-          <div className="w-14 h-14 bg-accent rounded-full flex items-center justify-center border-2 border-black mb-4">
-            <Bookmark className="w-7 h-7" />
+        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white border-2 border-[#8B1A1A] shadow-[4px_4px_0px_0px_rgba(139,26,26,0.4)] rounded-xl mt-8">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center border-2 border-[#8B1A1A] mb-4"
+               style={{ background: "#8B1A1A" }}>
+            <Bookmark className="w-7 h-7 text-[#FFF5EE]" />
           </div>
           <h3 className="font-display font-bold text-xl mb-2">No looks saved yet.</h3>
           <p className="text-sm font-medium text-muted-foreground">
-            Head to your Wardrobe, spin the slots, and save looks you love.
+            Head to the Holidays tab, spin the slots, and save looks you love. ❤️
           </p>
         </div>
       )}

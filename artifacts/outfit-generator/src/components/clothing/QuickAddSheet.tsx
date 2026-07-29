@@ -370,13 +370,18 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </p>
               <ul style={{ display: "flex", flexDirection: "column", gap: 8, margin: 0, padding: 0, listStyle: "none" }}>
                 {PHOTO_TIPS.map((tip) => (
-                  <li key={tip} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: C.brownFaint, lineHeight: 1.4 }}>
+                  <li key={tip} style={{
+                    display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13,
+                    color: C.brownFaint, lineHeight: 1.4,
+                    border: "1.5px solid #8B1A1A", borderRadius: 8,
+                    padding: "6px 8px",
+                  }}>
                     <span style={{
                       marginTop: 1, width: 16, height: 16, flexShrink: 0,
-                      border: `1.5px solid ${C.border}`, borderRadius: 4,
+                      border: "1.5px solid #8B1A1A", borderRadius: 4,
                       background: C.bgCard, display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
-                      <Check size={9} strokeWidth={3} color={C.gold} />
+                      <Check size={9} strokeWidth={3} color="#8B1A1A" />
                     </span>
                     {tip}
                   </li>
