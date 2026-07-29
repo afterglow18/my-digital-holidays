@@ -72,7 +72,7 @@ export default function SavedPage() {
   const addItemToOutfit = useAddItemToOutfit();
   const queryClient = useQueryClient();
   const { tier } = useEntitlements();
-  const categoryLabels = useCategoryLabels();
+  const { labels: categoryLabels } = useCategoryLabels();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [replacingSlot, setReplacingSlot] = useState<{ outfitId: number; category: SlotKey } | null>(null);
   const [addingExtra, setAddingExtra]     = useState<number | null>(null);
@@ -162,50 +162,90 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
-      <header className="mb-6">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">🎄 Lookbook</h1>
-        <div className="flex items-center justify-between">
-          <p className="font-medium text-muted-foreground text-sm">Your saved holiday looks.</p>
+    <div className="min-h-full flex flex-col pb-8 relative" style={{ background: "#F5F0E8" }}>
+
+      {/* ── Holiday red header band ── */}
+      <header
+        className="px-5 pb-5 mb-6"
+        style={{
+          background: "linear-gradient(160deg, #8B1A1A 0%, #6B1010 100%)",
+          paddingTop: "max(2rem, env(safe-area-inset-top))",
+        }}
+      >
+        <div style={{
+          fontFamily: "var(--font-display, serif)",
+          fontWeight: 800,
+          fontSize: 11,
+          letterSpacing: "0.20em",
+          textTransform: "uppercase",
+          color: "rgba(255,245,238,0.65)",
+          lineHeight: 1,
+          marginBottom: 4,
+          textShadow: "0 1px 6px rgba(0,0,0,0.40)",
+        }}>
+          My Digital Holidays
+        </div>
+        <div className="flex items-end justify-between gap-2">
+          <h1 style={{
+            fontFamily: "var(--font-display, serif)",
+            fontWeight: 800,
+            fontSize: 34,
+            letterSpacing: "0.03em",
+            color: "#FFF5EE",
+            lineHeight: 1.05,
+            textShadow: "0 2px 12px rgba(0,0,0,0.50)",
+            margin: 0,
+            textTransform: "uppercase",
+          }}>
+            Lookbook
+          </h1>
 
           {isFree && outfitCount > 0 && (
             <button
               onClick={() => setShowUpgrade(true)}
-              className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full
-                          border-2 transition-colors
-                          ${atLimit
-                            ? "bg-black text-white border-black"
-                            : outfitCount >= FREE_OUTFIT_LIMIT - 1
-                            ? "bg-primary border-[#8B1A1A] text-[#FFF5EE]"
-                            : "bg-white border-black/20 text-black/40 hover:border-black/40"
-                          }`}
+              className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border-2 transition-colors shrink-0 mb-1"
+              style={atLimit
+                ? { background: "#FFF5EE", color: "#8B1A1A", borderColor: "#FFF5EE" }
+                : outfitCount >= FREE_OUTFIT_LIMIT - 1
+                ? { background: "rgba(255,245,238,0.25)", color: "#FFF5EE", borderColor: "rgba(255,245,238,0.6)" }
+                : { background: "transparent", color: "rgba(255,245,238,0.55)", borderColor: "rgba(255,245,238,0.30)" }
+              }
             >
               {outfitCount}/{FREE_OUTFIT_LIMIT} saved
             </button>
           )}
         </div>
+        <p style={{
+          fontWeight: 600,
+          color: "rgba(255,245,238,0.65)",
+          fontSize: 12,
+          marginTop: 4,
+          letterSpacing: "0.03em",
+        }}>
+          Hall of fame.
+        </p>
       </header>
+
+      <div className="px-4">
 
       {atLimit && !isLoading && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 border-2 border-black rounded-xl bg-primary p-4
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+          className="mb-5 border-2 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+          style={{ background: "linear-gradient(135deg, #B52020 0%, #8B1A1A 100%)" }}
         >
-          <p className="font-display font-bold text-sm uppercase tracking-tight">
+          <p className="font-display font-bold text-sm uppercase tracking-tight" style={{ color: "#FFF5EE" }}>
             🔓 Lookbook is full
           </p>
-          <p className="text-xs text-black/60 mt-1 mb-3 leading-snug">
+          <p className="text-xs mt-1 mb-3 leading-snug" style={{ color: "rgba(255,245,238,0.70)" }}>
             You've saved {FREE_OUTFIT_LIMIT} looks — the free limit.
             Unlock Forever to save unlimited cases.
           </p>
           <button
             onClick={() => setShowUpgrade(true)}
-            className="w-full py-2.5 rounded-lg border-2 border-black bg-black text-white
-                       font-bold uppercase text-xs tracking-wide
-                       shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+            className="w-full py-2.5 rounded-lg border-2 font-bold uppercase text-xs tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+            style={{ background: "#FFF5EE", color: "#8B1A1A", borderColor: "#FFF5EE" }}
           >
             Unlock Forever – $4.99
           </button>
@@ -245,7 +285,10 @@ export default function SavedPage() {
                 data-testid={`outfit-card-${outfit.id}`}
               >
                 {/* Card header */}
-                <div className="px-4 py-3 border-b-2 border-[#8B1A1A] flex justify-between items-center bg-primary gap-2">
+                <div
+                  className="px-4 py-3 border-b-2 border-black flex justify-between items-center gap-2"
+                  style={{ background: "linear-gradient(135deg, #B52020 0%, #8B1A1A 100%)" }}
+                >
                   {renamingId === outfit.id ? (
                     <form
                       className="flex-1 flex items-center gap-1"
@@ -257,9 +300,14 @@ export default function SavedPage() {
                         onChange={(e) => setRenameValue(e.target.value)}
                         onBlur={() => commitRename(outfit.id)}
                         maxLength={60}
-                        className="flex-1 font-display font-bold text-lg uppercase tracking-tight bg-white/60 border-2 border-black rounded-lg px-2 py-0.5 outline-none min-w-0"
+                        className="flex-1 font-display font-bold text-lg uppercase tracking-tight bg-white/20 border-2 border-white/40 rounded-lg px-2 py-0.5 outline-none min-w-0"
+                        style={{ color: "#FFF5EE" }}
                       />
-                      <button type="submit" className="w-7 h-7 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0">
+                      <button
+                        type="submit"
+                        className="w-7 h-7 flex items-center justify-center border-2 border-white/40 rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] shrink-0"
+                        style={{ background: "rgba(255,245,238,0.20)", color: "#FFF5EE" }}
+                      >
                         <Check className="w-3.5 h-3.5" />
                       </button>
                     </form>
@@ -268,13 +316,19 @@ export default function SavedPage() {
                       onClick={() => startRename(outfit.id, outfit.name)}
                       className="flex-1 flex items-center gap-1.5 text-left group min-w-0"
                     >
-                      <h3 className="font-display font-bold text-lg uppercase tracking-tight truncate text-[#FFF5EE]">{outfit.name}</h3>
-                      <Pencil className="w-3 h-3 shrink-0 text-[#FFF5EE] opacity-0 group-hover:opacity-50 transition-opacity" />
+                      <h3
+                        className="font-display font-bold text-lg uppercase tracking-tight truncate"
+                        style={{ color: "#FFF5EE", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
+                      >
+                        {outfit.name}
+                      </h3>
+                      <Pencil className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: "#FFF5EE" }} />
                     </button>
                   )}
                   <button
                     onClick={() => handleDelete(outfit.id)}
-                    className="w-8 h-8 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:translate-x-0.5 active:shadow-none hover:bg-destructive/10 transition-colors shrink-0"
+                    className="w-8 h-8 flex items-center justify-center border-2 border-white/40 rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all shrink-0"
+                    style={{ background: "rgba(255,245,238,0.15)", color: "#FFF5EE" }}
                     data-testid={`button-delete-outfit-${outfit.id}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -412,10 +466,12 @@ export default function SavedPage() {
           })}
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white border-2 border-[#8B1A1A] shadow-[4px_4px_0px_0px_rgba(139,26,26,0.4)] rounded-xl mt-8">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center border-2 border-[#8B1A1A] mb-4"
-               style={{ background: "#8B1A1A" }}>
-            <Bookmark className="w-7 h-7 text-[#FFF5EE]" />
+        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl mt-8">
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center border-2 border-black mb-4"
+            style={{ background: "linear-gradient(135deg, #B52020 0%, #8B1A1A 100%)" }}
+          >
+            <Bookmark className="w-7 h-7" style={{ color: "#FFF5EE" }} />
           </div>
           <h3 className="font-display font-bold text-xl mb-2">No looks saved yet.</h3>
           <p className="text-sm font-medium text-muted-foreground">
@@ -423,6 +479,7 @@ export default function SavedPage() {
           </p>
         </div>
       )}
+      </div>{/* /px-4 */}
 
       {/* Upgrade sheet */}
       <AnimatePresence>
