@@ -222,7 +222,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
             </p>
             <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
                style={{ color: "hsl(35 55% 82%)" }}>
-              Unlimited saved holiday cases
+              Unlimited holiday combos
             </p>
             <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
               Everything you need, beautifully packed — forever. 🎄
