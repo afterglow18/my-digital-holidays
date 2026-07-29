@@ -293,7 +293,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
               }}
             >
               <Plus size={16} />
-              Add New Item to Wardrobe
+              Add New Item to Holidays
             </button>
           )}
         </div>
