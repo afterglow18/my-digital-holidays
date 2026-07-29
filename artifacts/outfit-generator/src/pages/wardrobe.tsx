@@ -421,16 +421,16 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── Lipstick icon tap zone — opens premium upgrade sheet ── */}
+          {/* ── Ornament icon tap zone — opens premium upgrade sheet ── */}
           <button
             onClick={() => setUpgradeReason("items")}
             aria-label="Upgrade to premium"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.905),
-              left:   pX(ir, 0.755),
-              width:  pW(ir, 0.110),
-              height: pH(ir, 0.065),
+              top:    pY(ir, 0.870),
+              left:   pX(ir, 0.720),
+              width:  pW(ir, 0.240),
+              height: pH(ir, 0.100),
               zIndex: 25,
               background: "transparent",
               border: "none",
