@@ -299,7 +299,7 @@ export default function GeneratePage() {
               <div style={{
                 fontFamily: "var(--font-display, serif)",
                 fontWeight: 800,
-                fontSize: Math.max(11, pW(ir, 0.042)),
+                fontSize: Math.max(9, pW(ir, 0.032)),
                 letterSpacing: "0.22em",
                 textTransform: "uppercase",
                 color: "rgba(255,245,238,0.90)",
