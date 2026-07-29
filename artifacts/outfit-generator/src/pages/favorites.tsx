@@ -167,16 +167,54 @@ export default function FavoritesPage() {
   };
 
   return (
-    <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10">
+    <div className="min-h-full flex flex-col pb-8" style={{ background: "#F5F0E8" }}>
 
-      <header className="mb-5">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">
+      {/* ── Holiday red header band ── */}
+      <header
+        className="px-5 pb-5"
+        style={{
+          background: "linear-gradient(160deg, #8B1A1A 0%, #6B1010 100%)",
+          paddingTop: "max(2rem, env(safe-area-inset-top))",
+        }}
+      >
+        <div style={{
+          fontFamily: "var(--font-display, serif)",
+          fontWeight: 800,
+          fontSize: 11,
+          letterSpacing: "0.20em",
+          textTransform: "uppercase",
+          color: "rgba(255,245,238,0.65)",
+          lineHeight: 1,
+          marginBottom: 4,
+          textShadow: "0 1px 6px rgba(0,0,0,0.40)",
+        }}>
+          My Digital Holidays
+        </div>
+        <h1 style={{
+          fontFamily: "var(--font-display, serif)",
+          fontWeight: 800,
+          fontSize: 34,
+          letterSpacing: "0.03em",
+          color: "#FFF5EE",
+          lineHeight: 1.05,
+          textShadow: "0 2px 12px rgba(0,0,0,0.50)",
+          margin: 0,
+          textTransform: "uppercase",
+        }}>
           My Faves ❤️
         </h1>
-        <p className="font-medium text-muted-foreground text-sm">
-          Saved items. Hold &amp; drag to reorder.
+        <p style={{
+          fontWeight: 600,
+          color: "rgba(255,245,238,0.65)",
+          fontSize: 12,
+          marginTop: 4,
+          letterSpacing: "0.03em",
+        }}>
+          Saved items · hold &amp; drag to reorder
         </p>
       </header>
+
+      <div className="px-4 pt-5">
 
       {isLoading ? (
         <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
@@ -202,8 +240,9 @@ export default function FavoritesPage() {
         <div className="flex-1 flex flex-col items-center justify-center text-center p-8
                         bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
                         rounded-xl mt-8">
-          <div className="w-14 h-14 bg-accent rounded-full flex items-center justify-center border-2 border-black mb-4">
-            <Heart className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-full flex items-center justify-center border-2 border-black mb-4"
+               style={{ background: "linear-gradient(160deg, #B52020, #8B1A1A)" }}>
+            <Heart className="w-7 h-7" style={{ color: "#FFF5EE" }} />
           </div>
           <h3 className="font-display font-bold text-xl mb-2">No faves yet.</h3>
           <p className="text-sm font-medium text-muted-foreground">
@@ -222,6 +261,7 @@ export default function FavoritesPage() {
           />
         )}
       </AnimatePresence>
+      </div>{/* /px-4 pt-5 */}
     </div>
   );
 }
