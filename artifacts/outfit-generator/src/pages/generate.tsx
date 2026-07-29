@@ -279,7 +279,7 @@ export default function GeneratePage() {
             {/* ── Page title ── */}
             <div style={{
               position: "absolute",
-              top: pY(ir, 0.072),
+              top: pY(ir, 0.082),
               left: 8,
               right: 8,
               zIndex: 25,
