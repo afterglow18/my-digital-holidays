@@ -9,11 +9,14 @@
  */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Trash2 } from "lucide-react";
 import {
   useListClothing,
   useCategoryLabels,
+  useDeleteClothingItem,
   getListClothingQueryKey,
+  getListOutfitsQueryKey,
+  getWardrobeStatsQueryKey,
   type ListClothingCategory,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
@@ -48,8 +51,27 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
   const [showQuickAdd, setShowQuickAdd]             = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [quickAddCategory, setQuickAddCategory]     = useState<Category>("outfits");
+  const [deletingId, setDeletingId]                 = useState<number | null>(null);
   const queryClient = useQueryClient();
   const { labels: catLabels } = useCategoryLabels();
+  const deleteItem = useDeleteClothingItem();
+
+  const handleDelete = (e: React.MouseEvent, itemId: number) => {
+    e.stopPropagation();
+    setDeletingId(itemId);
+    deleteItem.mutate(
+      { id: itemId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+          setDeletingId(null);
+        },
+        onError: () => setDeletingId(null),
+      },
+    );
+  };
 
   const params = category ? { category: category as ListClothingCategory } : {};
   const { data: items, isLoading } = useListClothing(
@@ -183,6 +205,23 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                           </span>
                         </div>
                       )}
+                      {/* Delete button */}
+                      <button
+                        onClick={(e) => handleDelete(e, item.id)}
+                        disabled={deletingId === item.id}
+                        aria-label="Delete item"
+                        style={{
+                          position: "absolute", top: 4, right: 4,
+                          width: 22, height: 22, borderRadius: "50%",
+                          background: "rgba(139,26,26,0.88)",
+                          border: "1.5px solid rgba(255,255,255,0.60)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", padding: 0, zIndex: 5,
+                          opacity: deletingId === item.id ? 0.5 : 1,
+                        }}
+                      >
+                        <Trash2 size={10} color="#FFF5EE" />
+                      </button>
                     </div>
                     <span style={{
                       fontSize: 10, fontWeight: 700,
