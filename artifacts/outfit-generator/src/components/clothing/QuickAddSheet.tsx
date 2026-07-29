@@ -232,7 +232,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   // Palette tokens (matches ItemDetailsSheet / WardrobePickerSheet)
   const C = {
     bg: "#FFF8F0", bgCard: "#FEFAF4", brown: "#3A2210",
-    brownFaint: "rgba(58,34,16,0.28)", border: "rgba(180,140,90,0.40)",
+    brownFaint: "rgba(58,34,16,0.72)", border: "rgba(180,140,90,0.40)",
     gold: "#8B1A1A", goldLight: "#B52020", btnText: "#FFF5EE",
   };
 
