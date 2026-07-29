@@ -27,7 +27,7 @@ const C = {
   brown:       "#3A2210",
   brownMid:    "rgba(58,34,16,0.55)",
   brownFaint:  "rgba(58,34,16,0.30)",
-  border:      "rgba(180,140,90,0.40)",
+  border:      "rgba(139,26,26,0.35)",
   borderFocus: "#8B1A1A",
   gold:        "#8B1A1A",   // deep red accent
   goldLight:   "#B52020",   // lighter red for gradient top
@@ -403,7 +403,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
-          <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
+          <Field label="Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
         </div>
 
         {/* Notes */}
@@ -501,7 +501,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             }}
           >
             <Trash2 size={13} />
-            Remove from Wardrobe
+            Remove from Holidays
           </button>
         ) : (
           <div style={{ display: "flex", gap: 8 }}>
