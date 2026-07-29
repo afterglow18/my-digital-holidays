@@ -239,10 +239,10 @@ export async function setSetting(key: string, value: string): Promise<void> {
 // ── Category labels ───────────────────────────────────────────────────────────
 
 export const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  outfits:    "Decor",
+  beauty:     "Gifts",
+  toiletries: "Treats",
+  essentials: "Storage",
 };
 
 /** Returns all four labels, falling back to defaults for any that haven't been renamed. */

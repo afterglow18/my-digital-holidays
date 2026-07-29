@@ -34,10 +34,10 @@ import {
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  outfits:    "Decor",
+  beauty:     "Gifts",
+  toiletries: "Treats",
+  essentials: "Storage",
 };
 
 type Phase = "pick" | "encoding" | "preview" | "uploading";
@@ -82,10 +82,10 @@ const PHOTO_TIPS = [
 ] as const;
 
 const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
-  outfits:    { emoji: "👗", items: ["Tops", "Bottoms", "Shoes", "Swim", "Undergarments", "Dresses", "Accessories"] },
-  beauty:     { emoji: "💄", items: ["Makeup", "Skincare", "Hair", "Jewelry", "Nail Polish"] },
-  toiletries: { emoji: "🪥", items: ["Shower", "Dental", "Medicine", "Feminine Care", "First Aid"] },
-  essentials: { emoji: "🧳", items: ["Travel Docs", "Tech", "Snacks", "Books", "Accessories"] },
+  outfits:    { emoji: "🎄", items: ["Fairy Lights", "Ornaments", "Wreaths", "Tree Decorations", "Candles", "Garlands", "Stockings"] },
+  beauty:     { emoji: "🎁", items: ["Wrapped Presents", "Gift Bags", "Ribbons", "Cards", "Tags", "Stocking Fillers"] },
+  toiletries: { emoji: "🍫", items: ["Christmas Cake", "Cookies", "Chocolates", "Sweets", "Mulled Wine", "Festive Snacks"] },
+  essentials: { emoji: "📦", items: ["Wrapping Paper", "Tape", "Scissors", "Boxes", "Tissue Paper", "Gift Bags"] },
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
