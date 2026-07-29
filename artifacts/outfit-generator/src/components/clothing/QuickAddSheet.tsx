@@ -337,24 +337,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </p>
             </div>
 
-            {/* What to add */}
-            {CATEGORY_EXAMPLES[category] && (
-              <div style={{
-                border: `1.5px solid ${C.border}`, borderRadius: 16,
-                background: C.bgCard, padding: 16,
-              }}>
-                <p style={{
-                  fontFamily: "var(--font-display, serif)", fontWeight: 700,
-                  fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase",
-                  color: C.brown, marginBottom: 8, display: "flex", alignItems: "center", gap: 6,
-                }}>
-                  <span>{CATEGORY_EXAMPLES[category].emoji}</span> What to Add
-                </p>
-                <p style={{ fontSize: 13, color: C.brownFaint, lineHeight: 1.5, margin: 0 }}>
-                  {CATEGORY_EXAMPLES[category].items.join(", ")}
-                </p>
-              </div>
-            )}
 
             {/* Photo tips */}
             <div style={{
