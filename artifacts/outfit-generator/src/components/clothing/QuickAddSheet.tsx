@@ -498,7 +498,25 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </button>
             </div>
 
-            {/* Retake only — no separate save button */}
+            {/* Save Original shortcut — only while cleaning is in progress */}
+            {bgProcessing && (
+              <button
+                onClick={() => saveWithVersion("original")}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "12px 0", borderRadius: 12, width: "100%",
+                  border: `2px solid ${C.gold}`,
+                  background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
+                  fontFamily: "var(--font-display, serif)", fontWeight: 800,
+                  fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase",
+                  color: C.btnText, cursor: "pointer",
+                }}
+              >
+                Save Original — skip cleaning
+              </button>
+            )}
+
+            {/* Retake */}
             <button
               onClick={() => setPhase("pick")}
               style={{
