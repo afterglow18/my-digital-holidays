@@ -75,7 +75,6 @@ async function encodeForUpload(input: File | Blob): Promise<Blob> {
 // ── Static copy ────────────────────────────────────────────────────────────────
 
 const PHOTO_TIPS = [
-  "Photograph individual products or bundle multiple items together.",
   "Lay everything flat on a plain background.",
   "Take the photo from directly above.",
   "Keep all items fully in frame.",
