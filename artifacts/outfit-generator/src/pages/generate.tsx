@@ -342,10 +342,11 @@ export default function GeneratePage() {
                       fontSize: Math.max(9, pH(ir, 0.013)),
                       fontWeight: 800,
                       letterSpacing: "0.12em",
-                      color: "#3A2210",
+                      color: "#FFF5EE",
                       fontFamily: "var(--font-display)",
                       textTransform: "uppercase",
                       pointerEvents: "none",
+                      textShadow: "0 1px 4px rgba(0,0,0,0.55)",
                     }}>
                       {label}
                     </span>
@@ -357,8 +358,8 @@ export default function GeneratePage() {
                         border: "none",
                         cursor: "pointer",
                         padding: "2px 3px",
-                        color: "#3A2210",
-                        opacity: 0.45,
+                        color: "#FFF5EE",
+                        opacity: 0.60,
                         display: "flex",
                         alignItems: "center",
                         lineHeight: 1,
@@ -394,7 +395,8 @@ export default function GeneratePage() {
                       <span style={{
                         fontSize: 10, fontWeight: 700,
                         letterSpacing: "0.09em", textTransform: "uppercase",
-                        color: "rgba(180,100,110,0.40)",
+                        color: "rgba(255,245,238,0.45)",
+                        textShadow: "0 1px 3px rgba(0,0,0,0.40)",
                       }}>
                         No items
                       </span>
@@ -442,7 +444,7 @@ export default function GeneratePage() {
               )}
             </AnimatePresence>
 
-            {/* ── Empty suitcase prompt ── */}
+            {/* ── Empty shelves prompt ── */}
             {!hasItems && (
               <div style={{
                 position: "absolute",
@@ -450,25 +452,25 @@ export default function GeneratePage() {
                 transform: "translate(-50%, -50%)",
                 zIndex: 30,
                 textAlign: "center",
-                padding: "14px 22px",
-                borderRadius: 16,
-                background: "rgba(245,237,216,0.92)",
-                border: "1.5px solid rgba(180,140,90,0.40)",
-                boxShadow: "0 4px 18px rgba(0,0,0,0.11)",
+                padding: "16px 24px",
+                borderRadius: 18,
+                background: "rgba(139,26,26,0.88)",
+                border: "1.5px solid rgba(180,40,40,0.50)",
+                boxShadow: "0 6px 24px rgba(0,0,0,0.30)",
                 maxWidth: pW(ir, 0.65),
               }}>
                 <p style={{
-                  fontWeight: 800, fontSize: 12,
-                  letterSpacing: "0.07em", textTransform: "uppercase",
-                  color: "#3A2210", fontFamily: "var(--font-display)", margin: 0,
+                  fontWeight: 800, fontSize: 13,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  color: "#FFF5EE", fontFamily: "var(--font-display)", margin: 0,
                 }}>
-                  Your wardrobe is empty
+                  🎄 Shelves are bare!
                 </p>
                 <p style={{
-                  fontSize: 11, color: "#9a5060",
-                  marginTop: 5, lineHeight: 1.5,
+                  fontSize: 11.5, color: "rgba(255,245,238,0.80)",
+                  marginTop: 6, lineHeight: 1.55,
                 }}>
-                  Add outfits, beauty, toiletries or essentials in the Wardrobe tab first.
+                  Add Decor, Gifts, Treats or Storage items in the Holidays tab first.
                 </p>
               </div>
             )}
