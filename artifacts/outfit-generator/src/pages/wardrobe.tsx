@@ -201,11 +201,12 @@ export default function WardrobePage() {
   const ready     = ir.width > 0;
 
   // ── Section layout helpers ────────────────────────────────────────────────
-  const sectionHeights = ready
-    ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
-    : LM.rows.map(() => 0);
-
-  // Use the smallest row height so all carousels show photos at the same size
+  // Label Y as a fraction for each row (used to pin carousel bounds)
+  const labelYFracs = LM.rows.map(lm =>
+    lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac
+  );
+  const LABEL_GAP_BELOW = 0.018;  // gap below label → carousel top
+  const LABEL_GAP_ABOVE = 0.008;  // gap above next label → carousel bottom
 
   return (
     <div
@@ -306,10 +307,14 @@ export default function WardrobePage() {
             const items    = rowData[key];
             const btnLabel = `+ ADD ${(categoryLabels[key] ?? key).toUpperCase()}`;
 
-            const secTop  = pY(ir, lm.sectionTop);
-            const secH    = pH(ir, lm.shelfY - lm.sectionTop);
-            const carLeft = pX(ir, LM.doorL);
-            const carW    = pW(ir, LM.doorR - LM.doorL);
+            const carLeft    = pX(ir, LM.doorL);
+            const carW       = pW(ir, LM.doorR - LM.doorL);
+            const carTopFrac = labelYFracs[rowIdx] + LABEL_GAP_BELOW;
+            const carBotFrac = rowIdx < LM.rows.length - 1
+              ? labelYFracs[rowIdx + 1] - LABEL_GAP_ABOVE
+              : lm.shelfY;
+            const carTop = pY(ir, carTopFrac);
+            const carH   = Math.max(0, pH(ir, carBotFrac - carTopFrac));
 
             // ADD button: centered in the section at btnCY
             const btnCY   = pY(ir, lm.btnCY);
@@ -357,10 +362,10 @@ export default function WardrobePage() {
                     data-testid={`row-${key}`}
                     style={{
                       position: "absolute",
-                      top:    secTop,
+                      top:    carTop,
                       left:   carLeft,
                       width:  carW,
-                      height: secH,
+                      height: carH,
                       zIndex: 10,
                       overflow: "hidden",
                     }}
@@ -370,7 +375,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={Math.max(1, sectionHeights[rowIdx] - 4)}
+                      maxPhotoH={Math.max(1, carH - 4)}
                     />
                   </div>
                 )}
