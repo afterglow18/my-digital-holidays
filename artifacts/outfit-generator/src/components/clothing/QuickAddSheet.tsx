@@ -189,9 +189,10 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
   }, []);
 
-  // ── handleSave ─────────────────────────────────────────────────────────────
-  const handleSave = useCallback(async () => {
-    const blob = selected === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
+  // ── saveWithVersion ────────────────────────────────────────────────────────
+  // Saves the chosen version directly — called by tapping a card in preview.
+  const saveWithVersion = useCallback(async (version: "original" | "cleaned") => {
+    const blob = version === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
     if (!blob) return;
     setPhase("uploading");
     try {
@@ -217,7 +218,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
       setPhase("preview");
     }
-  }, [selected, cleanedBlob, originalBlob, category, existingCount, createItem, queryClient, onCreated, handleClose]);
+  }, [cleanedBlob, originalBlob, category, existingCount, createItem, queryClient, onCreated, handleClose]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -414,45 +415,38 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             )}
 
             {/* Instruction label */}
-            <p className="text-center font-bold text-[11px] uppercase tracking-widest text-black/40">
+            <p style={{
+              textAlign: "center", fontSize: 11, fontWeight: 700,
+              letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(58,34,16,0.40)",
+              margin: 0,
+            }}>
               {bgProcessing
-                ? "Removing background… This will take a moment."
+                ? "Removing background… won't be long."
                 : bgFailed
-                ? "Background removal unavailable — using original"
-                : "Tap to choose your version"}
+                ? "Background removal unavailable — tap Original to save"
+                : "Tap a version to save it"}
             </p>
 
-            {/* Side-by-side cards */}
+            {/* Side-by-side cards — tapping saves that version directly */}
             <div style={{ display: "flex", gap: 12 }}>
               {/* Original card */}
               <button
-                onClick={() => setSelected("original")}
+                onClick={() => saveWithVersion("original")}
                 style={{
                   flex: 1, borderRadius: 16, overflow: "hidden",
-                  border: `2px solid ${selected === "original" ? C.gold : C.border}`,
-                  boxShadow: selected === "original" ? `0 3px 12px rgba(120,80,40,0.25)` : "none",
+                  border: `1.5px solid ${C.border}`,
                   background: "none", padding: 0, cursor: "pointer",
                 }}
               >
                 <div style={{ position: "relative", background: "#222", minHeight: 180 }}>
                   <img src={originalUrl!} alt="Original" style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }} />
-                  {selected === "original" && (
-                    <div style={{
-                      position: "absolute", top: 8, right: 8,
-                      width: 22, height: 22, borderRadius: "50%",
-                      background: C.gold, border: `2px solid #fff`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <Check size={11} strokeWidth={3} color="#fff" />
-                    </div>
-                  )}
                 </div>
                 <p style={{
                   textAlign: "center", fontFamily: "var(--font-display, serif)", fontWeight: 700,
                   fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
                   padding: "7px 0", margin: 0,
-                  borderTop: `1.5px solid ${selected === "original" ? C.gold : C.border}`,
-                  color: selected === "original" ? C.brown : "rgba(58,34,16,0.45)",
+                  borderTop: `1.5px solid ${C.border}`,
+                  color: "rgba(58,34,16,0.55)",
                 }}>
                   Original
                 </p>
@@ -460,14 +454,14 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
               {/* Cleaned card */}
               <button
-                onClick={() => cleanedUrl && setSelected("cleaned")}
+                onClick={() => cleanedUrl && saveWithVersion("cleaned")}
                 disabled={!cleanedUrl}
                 style={{
                   flex: 1, borderRadius: 16, overflow: "hidden",
-                  border: `2px solid ${selected === "cleaned" && cleanedUrl ? C.gold : C.border}`,
-                  boxShadow: selected === "cleaned" && cleanedUrl ? `0 3px 12px rgba(120,80,40,0.25)` : "none",
+                  border: `1.5px solid ${C.border}`,
                   background: "none", padding: 0,
-                  opacity: cleanedUrl ? 1 : 0.65, cursor: cleanedUrl ? "pointer" : "default",
+                  opacity: cleanedUrl ? 1 : 0.65,
+                  cursor: cleanedUrl ? "pointer" : "default",
                 }}
               >
                 <div style={{
@@ -476,19 +470,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   {cleanedUrl ? (
-                    <>
-                      <img src={cleanedUrl} alt="Background removed" style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }} />
-                      {selected === "cleaned" && (
-                        <div style={{
-                          position: "absolute", top: 8, right: 8,
-                          width: 22, height: 22, borderRadius: "50%",
-                          background: C.gold, border: `2px solid #fff`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <Check size={11} strokeWidth={3} color="#fff" />
-                        </div>
-                      )}
-                    </>
+                    <img src={cleanedUrl} alt="Background removed" style={{ width: "100%", objectFit: "contain", maxHeight: 180, display: "block" }} />
                   ) : bgFailed ? (
                     <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "rgba(58,34,16,0.35)", textAlign: "center", padding: "0 12px" }}>
                       Could not remove background
@@ -504,54 +486,29 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   textAlign: "center", fontFamily: "var(--font-display, serif)", fontWeight: 700,
                   fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
                   padding: "7px 0", margin: 0,
-                  borderTop: `1.5px solid ${selected === "cleaned" && cleanedUrl ? C.gold : C.border}`,
-                  color: selected === "cleaned" && cleanedUrl ? C.brown : "rgba(58,34,16,0.45)",
+                  borderTop: `1.5px solid ${C.border}`,
+                  color: "rgba(58,34,16,0.55)",
                 }}>
                   Cleaned ✨
                 </p>
               </button>
             </div>
 
-            {/* Action row */}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                onClick={() => setPhase("pick")}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  padding: "11px 18px", borderRadius: 12,
-                  border: `1.5px solid ${C.border}`, background: C.bgCard,
-                  fontFamily: "var(--font-display, serif)", fontWeight: 700,
-                  fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", color: C.brown,
-                  cursor: "pointer",
-                }}
-              >
-                <RotateCcw size={14} />
-                Retake
-              </button>
-
-              <button
-                onClick={handleSave}
-                disabled={selected === "cleaned" && !cleanedUrl}
-                style={{
-                  flex: 1, padding: "11px 0", borderRadius: 12,
-                  border: `1.5px solid ${C.gold}`,
-                  background: (selected === "cleaned" && !cleanedUrl)
-                    ? C.goldLight
-                    : `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
-                  fontFamily: "var(--font-display, serif)", fontWeight: 800,
-                  fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", color: C.brown,
-                  cursor: (selected === "cleaned" && !cleanedUrl) ? "not-allowed" : "pointer",
-                  opacity: (selected === "cleaned" && !cleanedUrl) ? 0.6 : 1,
-                  boxShadow: "0 3px 12px rgba(120,80,40,0.20)",
-                }}
-              >
-                {selected === "cleaned" && !cleanedUrl
-                  ? "Processing…"
-                  : selected === "cleaned"
-                  ? "✓ Save Cleaned Version"
-                  : "✓ Save to Wardrobe"}
-              </button>
-            </div>
+            {/* Retake only — no separate save button */}
+            <button
+              onClick={() => setPhase("pick")}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "10px 0", borderRadius: 12, width: "100%",
+                border: `1.5px solid ${C.border}`, background: C.bgCard,
+                fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: C.brownFaint,
+                cursor: "pointer",
+              }}
+            >
+              <RotateCcw size={13} />
+              Retake
+            </button>
           </div>
         )}
 
