@@ -71,8 +71,8 @@ const LM = {
     // ⚠️ labelFrac values are PINNED — approved by design, do not adjust
     { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },  // shelf 1
     { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.82 },  // shelf 2
-    { sectionTop: 0.475, shelfY: 0.625, btnCY: 0.548, labelFrac: 1.35 },  // shelf 3
-    { sectionTop: 0.640, shelfY: 0.785, btnCY: 0.710, labelFrac: 1.83 },  // shelf 4
+    { sectionTop: 0.495, shelfY: 0.645, btnCY: 0.568, labelFrac: 1.35 },  // shelf 3
+    { sectionTop: 0.660, shelfY: 0.805, btnCY: 0.730, labelFrac: 1.83 },  // shelf 4
   ],
 
   saveAreaY: 0.81,
