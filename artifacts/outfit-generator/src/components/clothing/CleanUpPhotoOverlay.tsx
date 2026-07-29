@@ -152,7 +152,7 @@ export function CleanUpPhotoOverlay({ open, originalUrl, onClose, onSave }: Prop
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border-2 border-black/15 bg-white/60">
             <span className="text-base leading-none mt-0.5">✨</span>
             <p className="text-xs text-black/50 leading-snug font-medium">
-              Runs entirely on your device — no photos leave your phone. First use downloads a ~15 MB model.
+              Runs entirely on your device — no photos leave your phone.
             </p>
           </div>
 

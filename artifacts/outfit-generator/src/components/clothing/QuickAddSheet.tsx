@@ -333,7 +333,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             }}>
               <span style={{ fontSize: 15, lineHeight: 1, marginTop: 1 }}>✨</span>
               <p style={{ fontSize: 12, color: C.brownFaint, lineHeight: 1.5, fontWeight: 500, margin: 0 }}>
-                Background removal runs on-device after you pick a photo. First use downloads a ~15 MB model.
+                Background removal runs on-device after you pick a photo.
               </p>
             </div>
 
