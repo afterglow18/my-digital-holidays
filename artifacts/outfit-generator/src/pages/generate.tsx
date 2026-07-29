@@ -37,8 +37,8 @@ const LM = {
   rows: [
     { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },  // OUTFITS     (shelf 1)
     { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.92 },  // BEAUTY      (shelf 2)
-    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558, labelFrac: 1.25 },  // TOILETRIES  (shelf 3)
-    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720, labelFrac: 1.70 },  // ESSENTIALS  (shelf 4)
+    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558, labelFrac: 1.32 },  // TOILETRIES  (shelf 3)
+    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720, labelFrac: 1.77 },  // ESSENTIALS  (shelf 4)
   ],
   // Action bar: decorative base area at the bottom
   barY:   0.810,
