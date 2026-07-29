@@ -254,8 +254,8 @@ export default function WardrobePage() {
             <div style={{
               fontFamily: "'Dancing Script', cursive",
               fontWeight: 700,
-              fontSize: Math.max(20, pW(ir, 0.082)),
-              color: "#FFF5EE",
+              fontSize: Math.max(17, pW(ir, 0.068)),
+              color: "#C0390B",
               lineHeight: 1.05,
               textShadow: "0 2px 14px rgba(0,0,0,0.55)",
             }}>
