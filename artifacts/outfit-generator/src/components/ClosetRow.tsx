@@ -287,9 +287,9 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
               const p = Math.max(0, Math.min(1, 1 - distSlots));
               scale   = SCALE_SIDE  + (SCALE_CTR   - SCALE_SIDE)   * p;
               opacity = OPACITY_SIDE + (1           - OPACITY_SIDE) * p;
-              bg      = `rgba(255,240,235,${(p * 0.88).toFixed(3)})`;
+              bg      = `rgba(205,178,140,${(p * 0.90).toFixed(3)})`;
               shadow  = p > 0.05
-                ? `0 ${(4 * p).toFixed(1)}px ${(16 * p).toFixed(1)}px rgba(200,100,120,${(0.22 * p).toFixed(3)})`
+                ? `0 ${(4 * p).toFixed(1)}px ${(16 * p).toFixed(1)}px rgba(80,50,20,${(0.22 * p).toFixed(3)})`
                 : "none";
             }
 
