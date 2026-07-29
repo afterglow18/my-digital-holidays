@@ -206,7 +206,6 @@ export default function WardrobePage() {
     : LM.rows.map(() => 0);
 
   // Use the smallest row height so all carousels show photos at the same size
-  const uniformPhotoH = Math.max(0, Math.min(...sectionHeights) - 4);
 
   return (
     <div
