@@ -363,7 +363,7 @@ export default function WardrobePage() {
                       width:  carW,
                       height: secH,
                       zIndex: 10,
-                      overflow: "visible",
+                      overflow: "hidden",
                     }}
                   >
                     <ClosetRow
@@ -371,7 +371,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={uniformPhotoH}
+                      maxPhotoH={Math.max(1, sectionHeights[rowIdx] - 4)}
                     />
                   </div>
                 )}
