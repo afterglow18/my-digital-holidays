@@ -62,8 +62,8 @@ function YellowButton({
       onClick={onClick}
       disabled={!!pending}
       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
-                 border-[3px] border-black font-display font-bold text-sm uppercase
-                 tracking-tight bg-primary text-black
+                 border-[3px] border-[#8B1A1A] font-display font-bold text-sm uppercase
+                 tracking-tight bg-primary text-[#FFF5EE]
                  active:translate-x-0.5 active:translate-y-0.5 transition-all
                  disabled:opacity-50 disabled:cursor-not-allowed"
     >
@@ -301,7 +301,7 @@ export default function AccountPage() {
         </Card>
 
         {/* ── 3. APP INFO ─────────────────────────────────────────────────── */}
-        <Card emoji="🌴" title="My Digital Holidays">
+        <Card emoji="🎄" title="My Digital Holidays">
           <p className="text-sm text-black/55 leading-snug">
             Version 1.0.0
           </p>
