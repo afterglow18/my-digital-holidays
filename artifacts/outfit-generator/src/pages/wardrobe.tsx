@@ -433,17 +433,17 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── Transparent overlay tap zone — triggers save over the baked-in circle ── */}
+          {/* ── Transparent overlay tap zone — triggers save over the baked-in pill ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
-            aria-label="Save current case"
+            aria-label="Save current set"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.920) - pW(ir, 0.074),
-              left:   pX(ir, 0.500)  - pW(ir, 0.074),
-              width:  pW(ir, 0.148),
-              height: pW(ir, 0.148),
-              borderRadius: "50%",
+              top:    pY(ir, 0.905),
+              left:   pX(ir, 0.17),
+              width:  pW(ir, 0.66),
+              height: pH(ir, 0.058),
+              borderRadius: 40,
               zIndex: 26,
               background: "transparent",
               border: "none",
