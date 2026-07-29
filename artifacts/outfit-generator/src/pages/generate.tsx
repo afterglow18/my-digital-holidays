@@ -290,7 +290,7 @@ export default function GeneratePage() {
                 fontFamily: "'Dancing Script', cursive",
                 fontWeight: 700,
                 fontSize: Math.max(17, pW(ir, 0.068)),
-                color: "#C0390B",
+                color: "#8B1A1A",
                 lineHeight: 1.05,
                 textShadow: "0 2px 14px rgba(0,0,0,0.55)",
               }}>
