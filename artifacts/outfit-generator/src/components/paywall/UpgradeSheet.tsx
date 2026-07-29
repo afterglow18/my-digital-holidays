@@ -209,10 +209,26 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#111" }}>
           {/* Plaid red ribbon accent */}
           <div style={{
-            height: 14,
-            background: `
-              repeating-linear-gradient(90deg, #8B1A1A 0px, #8B1A1A 18px, #A52020 18px, #A52020 20px, #8B1A1A 20px, #8B1A1A 38px, #C0390B 38px, #C0390B 40px),
-              repeating-linear-gradient(0deg,  rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 10px)
+            height: 18,
+            backgroundImage: `
+              repeating-linear-gradient(90deg,
+                transparent 0px, transparent 14px,
+                rgba(255,255,255,0.22) 14px, rgba(255,255,255,0.22) 16px,
+                transparent 16px, transparent 30px,
+                rgba(0,0,0,0.18) 30px, rgba(0,0,0,0.18) 32px
+              ),
+              repeating-linear-gradient(0deg,
+                transparent 0px, transparent 4px,
+                rgba(255,255,255,0.22) 4px, rgba(255,255,255,0.22) 6px,
+                transparent 6px, transparent 12px,
+                rgba(0,0,0,0.18) 12px, rgba(0,0,0,0.18) 14px
+              ),
+              repeating-linear-gradient(90deg,
+                #7A1515 0px, #7A1515 14px,
+                #A52020 14px, #A52020 16px,
+                #7A1515 16px, #7A1515 30px,
+                #5C0F0F 30px, #5C0F0F 32px
+              )
             `,
           }} />
           <div className="px-4 py-4 flex flex-col gap-2">
