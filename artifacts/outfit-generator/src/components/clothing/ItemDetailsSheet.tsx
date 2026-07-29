@@ -501,7 +501,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             }}
           >
             <Trash2 size={13} />
-            Remove from Holidays
+            Delete from Holidays Forever
           </button>
         ) : (
           <div style={{ display: "flex", gap: 8 }}>
