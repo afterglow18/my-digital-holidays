@@ -1,8 +1,17 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Shirt, Sparkles, Bookmark, Settings } from "lucide-react";
+import { Sparkles, Bookmark, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetWardrobeStats } from "@/hooks/useLocalDB";
+
+// Christmas tree nav icon — matches Lucide icon prop signature
+function TreeIcon({ className }: { className?: string; strokeWidth?: number }) {
+  return (
+    <span className={className} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25em", lineHeight: 1 }}>
+      🎄
+    </span>
+  );
+}
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -21,7 +30,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     : undefined;
 
   const navItems = [
-    { href: "/",         label: "Wardrobe", icon: Shirt,    badge: wardrobeCount },
+    { href: "/",         label: "Holidays", icon: TreeIcon, badge: wardrobeCount },
     { href: "/generate", label: "Generate", icon: Sparkles  },
     { href: "/saved",    label: "Saved",    icon: Bookmark  },
     { href: "/account",  label: "Settings", icon: Settings  },
