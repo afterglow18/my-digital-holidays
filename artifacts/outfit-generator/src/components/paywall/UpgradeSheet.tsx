@@ -206,7 +206,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         </div>
 
         {/* Features card */}
-        <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#111" }}>
+        <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#8B1A1A" }}>
           {/* Plaid red ribbon accent */}
           <div style={{
             height: 18,
@@ -241,7 +241,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
               Unlimited holiday combos
             </p>
             <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
-              Everything you need, beautifully packed — forever. 🎄
+              Everything you need, beautifully planned — forever. 🎄
             </p>
           </div>
         </div>
