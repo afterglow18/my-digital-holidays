@@ -207,7 +207,8 @@ export default function WardrobePage() {
     "pinnedLabelY" in lm ? lm.pinnedLabelY : lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac
   );
   const LABEL_GAP_BELOW = 0.018;       // gap below label → carousel top (rows 1–2)
-  const LABEL_GAP_BELOW_LOWER = 0.014; // tighter gap for rows 3–4
+  const LABEL_GAP_BELOW_LOWER  = 0.014; // tighter gap for row 3
+  const LABEL_GAP_BELOW_ROW4  = 0.012; // tighter gap for row 4
   const LABEL_GAP_ABOVE = 0.008;       // gap above next label → carousel bottom
 
   return (
@@ -311,7 +312,7 @@ export default function WardrobePage() {
 
             const carLeft    = pX(ir, LM.doorL);
             const carW       = pW(ir, LM.doorR - LM.doorL);
-            const carTopFrac = labelYFracs[rowIdx] + (rowIdx >= 2 ? LABEL_GAP_BELOW_LOWER : LABEL_GAP_BELOW);
+            const carTopFrac = labelYFracs[rowIdx] + (rowIdx === 3 ? LABEL_GAP_BELOW_ROW4 : rowIdx === 2 ? LABEL_GAP_BELOW_LOWER : LABEL_GAP_BELOW);
             // Shelf 4 (Storage): trim the bottom so the carousel doesn't overflow the shelf
             const rawCarBotFrac = rowIdx < LM.rows.length - 1
               ? labelYFracs[rowIdx + 1] - LABEL_GAP_ABOVE
