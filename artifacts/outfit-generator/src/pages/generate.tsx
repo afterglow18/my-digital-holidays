@@ -35,10 +35,10 @@ const LM = {
   doorL: 0.07,
   doorR: 0.93,
   rows: [
-    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215 },  // OUTFITS     (shelf 1)
-    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390 },  // BEAUTY      (shelf 2)
-    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558 },  // TOILETRIES  (shelf 3)
-    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720 },  // ESSENTIALS  (shelf 4)
+    { sectionTop: 0.135, shelfY: 0.300, btnCY: 0.215, labelFrac: 0.08 },  // OUTFITS     (shelf 1)
+    { sectionTop: 0.315, shelfY: 0.470, btnCY: 0.390, labelFrac: 0.75 },  // BEAUTY      (shelf 2)
+    { sectionTop: 0.485, shelfY: 0.635, btnCY: 0.558, labelFrac: 0.75 },  // TOILETRIES  (shelf 3)
+    { sectionTop: 0.650, shelfY: 0.795, btnCY: 0.720, labelFrac: 0.75 },  // ESSENTIALS  (shelf 4)
   ],
   // Action bar: decorative base area at the bottom
   barY:   0.810,
@@ -318,7 +318,7 @@ export default function GeneratePage() {
               const btnH   = Math.max(32, pH(ir, 0.045));
 
               const label  = (categoryLabels[key] ?? key).toUpperCase();
-              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * lm.labelFrac);
               const iconSz = Math.max(8, pH(ir, 0.011));
 
               return (
