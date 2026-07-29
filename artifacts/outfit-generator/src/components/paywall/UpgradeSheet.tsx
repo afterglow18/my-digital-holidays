@@ -207,17 +207,25 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
         {/* Features card */}
         <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#111" }}>
+          {/* Plaid red ribbon accent */}
+          <div style={{
+            height: 14,
+            background: `
+              repeating-linear-gradient(90deg, #8B1A1A 0px, #8B1A1A 18px, #A52020 18px, #A52020 20px, #8B1A1A 20px, #8B1A1A 38px, #C0390B 38px, #C0390B 40px),
+              repeating-linear-gradient(0deg,  rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 10px)
+            `,
+          }} />
           <div className="px-4 py-4 flex flex-col gap-2">
             <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
                style={{ color: "hsl(35 55% 82%)" }}>
-              Unlimited holiday wardrobes
+              Unlimited holiday collections
             </p>
             <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
                style={{ color: "hsl(35 55% 82%)" }}>
-              Unlimited saved outfits
+              Unlimited saved packing lists
             </p>
             <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
-              Your entire wardrobe, beautifully packed — forever.
+              Everything you need, beautifully packed — forever. 🎄
             </p>
           </div>
         </div>
