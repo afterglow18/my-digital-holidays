@@ -437,7 +437,7 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── SAVE circular button — covers the baked-in circle ── */}
+          {/* ── Transparent overlay tap zone — triggers save over the baked-in circle ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
             aria-label="Save current case"
@@ -449,22 +449,12 @@ export default function WardrobePage() {
               height: pW(ir, 0.148),
               borderRadius: "50%",
               zIndex: 26,
-              background: "linear-gradient(160deg, #B52020 0%, #8B1A1A 100%)",
-              border: "2px solid #8B1A1A",
-              boxShadow: "0 2px 10px rgba(100,10,10,0.35)",
+              background: "transparent",
+              border: "none",
               cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0,
-              lineHeight: 1.15,
               padding: 0,
             }}
-          >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#FFF5EE", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#FFF5EE", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CASE 🤎</span>
-          </button>
+          />
         </>
       )}
 
