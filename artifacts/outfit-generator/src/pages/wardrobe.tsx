@@ -253,9 +253,10 @@ export default function WardrobePage() {
               fontSize: Math.max(11, pW(ir, 0.040)),
               letterSpacing: "0.20em",
               textTransform: "uppercase",
-              color: "rgba(58,34,16,0.55)",
+              color: "rgba(255,245,238,0.65)",
               lineHeight: 1,
               marginBottom: 2,
+              textShadow: "0 1px 6px rgba(0,0,0,0.40)",
             }}>
               My Digital
             </div>
@@ -264,9 +265,9 @@ export default function WardrobePage() {
               fontWeight: 800,
               fontSize: Math.max(22, pW(ir, 0.082)),
               letterSpacing: "0.04em",
-              color: "#3A2210",
+              color: "#FFF5EE",
               lineHeight: 1.05,
-              textShadow: "0 1px 10px rgba(255,210,130,0.55)",
+              textShadow: "0 2px 12px rgba(0,0,0,0.50)",
             }}>
               Holidays
             </div>
@@ -341,9 +342,10 @@ export default function WardrobePage() {
                     fontSize: Math.max(9, pH(ir, 0.013)),
                     fontWeight: 800,
                     letterSpacing: "0.12em",
-                    color: "#3A2210",
+                    color: "#FFF5EE",
                     fontFamily: "var(--font-display)",
                     textTransform: "uppercase",
+                    textShadow: "0 1px 4px rgba(0,0,0,0.55)",
                   }}>
                     {btnLabel}
                   </span>
@@ -447,9 +449,9 @@ export default function WardrobePage() {
               height: pW(ir, 0.148),
               borderRadius: "50%",
               zIndex: 26,
-              background: "linear-gradient(160deg, #E8D4B0 0%, #B8894E 100%)",
-              border: "2px solid #B8894E",
-              boxShadow: "0 2px 8px rgba(120,80,40,0.25)",
+              background: "linear-gradient(160deg, #B52020 0%, #8B1A1A 100%)",
+              border: "2px solid #8B1A1A",
+              boxShadow: "0 2px 10px rgba(100,10,10,0.35)",
               cursor: "pointer",
               display: "flex",
               flexDirection: "column",
@@ -460,8 +462,8 @@ export default function WardrobePage() {
               padding: 0,
             }}
           >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#3A2210", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#3A2210", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CASE 🤎</span>
+            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#FFF5EE", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
+            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#FFF5EE", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CASE 🤎</span>
           </button>
         </>
       )}
@@ -530,9 +532,9 @@ export default function WardrobePage() {
                       disabled={!saveName.trim() || saveOutfit.isPending}
                       style={{
                         flex: 1, height: 40, borderRadius: 20,
-                        border: "2px solid #B8894E",
-                        background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
-                        color: "#3A2210", fontWeight: 800, fontSize: 13,
+                        border: "2px solid #8B1A1A",
+                        background: "linear-gradient(to bottom, #B52020, #8B1A1A)",
+                        color: "#FFF5EE", fontWeight: 800, fontSize: 13,
                         cursor: saveName.trim() ? "pointer" : "default",
                         opacity: saveName.trim() ? 1 : 0.45,
                         fontFamily: "var(--font-display)",

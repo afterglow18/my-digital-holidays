@@ -28,7 +28,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
-const PINK  = "#E8D4B0";
+const PINK  = "#8B1A1A";
 
 // ── Landmark fractions (calibrated for shelf-bg.png) ─────────────────────────
 const LM = {
@@ -288,9 +288,10 @@ export default function GeneratePage() {
                 fontSize: Math.max(9, pW(ir, 0.032)),
                 letterSpacing: "0.20em",
                 textTransform: "uppercase",
-                color: "rgba(58,34,16,0.55)",
+                color: "rgba(255,245,238,0.65)",
                 lineHeight: 1,
                 marginBottom: 1,
+                textShadow: "0 1px 6px rgba(0,0,0,0.40)",
               }}>
                 My Digital Holidays
               </div>
@@ -299,9 +300,9 @@ export default function GeneratePage() {
                 fontWeight: 800,
                 fontSize: Math.max(18, pW(ir, 0.068)),
                 letterSpacing: "0.04em",
-                color: "#3A2210",
+                color: "#FFF5EE",
                 lineHeight: 1.05,
-                textShadow: "0 1px 10px rgba(255,210,130,0.55)",
+                textShadow: "0 2px 12px rgba(0,0,0,0.50)",
               }}>
                 Matchmaker
               </div>
@@ -517,11 +518,11 @@ export default function GeneratePage() {
                     disabled={!hasItems}
                     style={{
                       width: "100%", height: 52, borderRadius: 28,
-                      border: "2.5px solid #B8894E",
+                      border: "2.5px solid #8B1A1A",
                       background: hasItems
-                        ? "linear-gradient(to bottom, #E8D4B0, #B8894E)"
-                        : "rgba(200,175,140,0.32)",
-                      color: hasItems ? "#3A2210" : "#7A5A30",
+                        ? "linear-gradient(to bottom, #B52020, #8B1A1A)"
+                        : "rgba(139,26,26,0.18)",
+                      color: hasItems ? "#FFF5EE" : "rgba(255,245,238,0.45)",
                       fontWeight: 800, fontSize: 16,
                       letterSpacing: "-0.01em", textTransform: "uppercase",
                       whiteSpace: "nowrap",
@@ -585,9 +586,9 @@ export default function GeneratePage() {
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
                         height: 54, borderRadius: 28,
-                        border: "2.5px solid #B8894E",
-                        background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
-                        color: "#4A3A3A",
+                        border: "2.5px solid #8B1A1A",
+                        background: "linear-gradient(to bottom, #B52020, #8B1A1A)",
+                        color: "#FFF5EE",
                         fontFamily: "var(--font-display)",
                         fontWeight: 800, fontSize: 14,
                         letterSpacing: "-0.01em", textTransform: "uppercase",
@@ -609,7 +610,7 @@ export default function GeneratePage() {
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
                         height: 54, borderRadius: 28,
-                        border: "2.5px solid #B8894E",
+                        border: "2.5px solid #8B1A1A",
                         background: canSave ? "#fff" : "rgba(240,240,240,0.80)",
                         color: "#3A2210",
                         fontFamily: "var(--font-display)",
@@ -672,8 +673,8 @@ export default function GeneratePage() {
                       disabled={!saveName.trim() || saveOutfit.isPending}
                       style={{
                         padding: "0 14px", height: 36, borderRadius: 20, flexShrink: 0,
-                        background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
-                        color: "#3A2210", fontWeight: 700, fontSize: 13, border: "1.5px solid #B8894E",
+                        background: "linear-gradient(to bottom, #B52020, #8B1A1A)",
+                        color: "#FFF5EE", fontWeight: 700, fontSize: 13, border: "1.5px solid #8B1A1A",
                         boxShadow: "0 3px 10px rgba(120,80,40,0.30)",
                         opacity: (!saveName.trim() || saveOutfit.isPending) ? 0.42 : 1,
                         cursor: "pointer",

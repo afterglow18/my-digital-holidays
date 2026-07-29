@@ -57,7 +57,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       <Icon
                         className={cn(
                           "w-6 h-6",
-                          isActive ? "text-black" : "text-muted-foreground",
+                          isActive ? "text-[#fff5ee]" : "text-muted-foreground",
                           item.href === "/generate" && isActive ? "animate-pulse" : ""
                         )}
                         strokeWidth={isActive ? 2.5 : 2}
@@ -73,7 +73,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <span
                       className={cn(
                         "text-[10px] font-bold uppercase tracking-wider transition-colors",
-                        isActive ? "text-black" : "text-muted-foreground"
+                        isActive ? "text-[#8b1a1a]" : "text-muted-foreground"
                       )}
                     >
                       {item.label}

@@ -234,7 +234,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const C = {
     bg: "#FFF8F0", bgCard: "#FEFAF4", brown: "#3A2210",
     brownFaint: "rgba(58,34,16,0.28)", border: "rgba(180,140,90,0.40)",
-    gold: "#B8894E", goldLight: "#E8D4B0",
+    gold: "#8B1A1A", goldLight: "#B52020", btnText: "#FFF5EE",
   };
 
   return (
@@ -292,14 +292,14 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 0",
                   borderRadius: 18, border: `2px solid ${C.gold}`,
                   background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
-                  cursor: "pointer", boxShadow: "0 4px 16px rgba(120,80,40,0.22)",
+                  cursor: "pointer", boxShadow: "0 4px 16px rgba(100,10,10,0.25)",
                 }}
               >
                 <span style={{ fontSize: 36, lineHeight: 1 }}>📷</span>
                 <span style={{
                   fontFamily: "var(--font-display, serif)", fontWeight: 800,
                   fontSize: 15, letterSpacing: "0.04em", textTransform: "uppercase",
-                  color: C.brown, textAlign: "center", lineHeight: 1.2,
+                  color: C.btnText, textAlign: "center", lineHeight: 1.2,
                 }}>
                   Take<br />Photo
                 </span>

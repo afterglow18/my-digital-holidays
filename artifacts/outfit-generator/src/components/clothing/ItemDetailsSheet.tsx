@@ -28,9 +28,10 @@ const C = {
   brownMid:    "rgba(58,34,16,0.55)",
   brownFaint:  "rgba(58,34,16,0.30)",
   border:      "rgba(180,140,90,0.40)",
-  borderFocus: "#B8894E",
-  gold:        "#B8894E",
-  goldLight:   "#E8D4B0",
+  borderFocus: "#8B1A1A",
+  gold:        "#8B1A1A",   // deep red accent
+  goldLight:   "#B52020",   // lighter red for gradient top
+  btnText:     "#FFF5EE",   // off-white text on accent buttons
 };
 
 // ── Shared field styles ───────────────────────────────────────────────────────
@@ -470,7 +471,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                 background: updateItem.isPending
                   ? C.goldLight
                   : `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
-                color: C.brown,
+                color: C.btnText,
                 fontSize: 13, fontWeight: 800,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 cursor: updateItem.isPending ? "not-allowed" : "pointer",

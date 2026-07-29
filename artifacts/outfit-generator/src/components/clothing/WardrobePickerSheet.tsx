@@ -28,8 +28,9 @@ const C = {
   brown:      "#3A2210",
   brownFaint: "rgba(58,34,16,0.28)",
   border:     "rgba(180,140,90,0.40)",
-  gold:       "#B8894E",
-  goldLight:  "#E8D4B0",
+  gold:       "#8B1A1A",   // deep red accent
+  goldLight:  "#B52020",   // lighter red for gradient top
+  btnText:    "#FFF5EE",   // off-white text on accent buttons
 };
 
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
@@ -228,11 +229,11 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                 borderRadius: 14,
                 border: `1.5px solid ${C.gold}`,
                 background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
-                color: C.brown,
+                color: C.btnText,
                 fontSize: 13, fontWeight: 800,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 cursor: "pointer",
-                boxShadow: "0 3px 12px rgba(120,80,40,0.20)",
+                boxShadow: "0 3px 12px rgba(100,10,10,0.22)",
               }}
             >
               <Plus size={16} />
@@ -284,11 +285,11 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                 borderRadius: 14,
                 border: `1.5px solid ${C.gold}`,
                 background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
-                color: C.brown,
+                color: C.btnText,
                 fontSize: 13, fontWeight: 800,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 cursor: "pointer",
-                boxShadow: "0 3px 12px rgba(120,80,40,0.20)",
+                boxShadow: "0 3px 12px rgba(100,10,10,0.22)",
               }}
             >
               <Plus size={16} />
