@@ -439,7 +439,7 @@ export default function WardrobePage() {
             aria-label="Save current set"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.905),
+              top:    pY(ir, 0.878),
               left:   pX(ir, 0.17),
               width:  pW(ir, 0.66),
               height: pH(ir, 0.058),
