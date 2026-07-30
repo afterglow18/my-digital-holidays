@@ -110,6 +110,14 @@ workflows:
           # Required for Face ID usage
           /usr/libexec/PlistBuddy -c "Add :NSFaceIDUsageDescription string 'My Digital Holidays uses Face ID to protect your wardrobe.'" App/Info.plist 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :NSFaceIDUsageDescription 'My Digital Holidays uses Face ID to protect your wardrobe.'" App/Info.plist
+          # Camera & photo library — explicitly injected here because cap sync does
+          # not reliably write infoPlist values into an existing Info.plist on every run.
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'My Holidays uses your camera to photograph items for your wardrobe.'" App/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'My Holidays uses your camera to photograph items for your wardrobe.'" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'My Holidays reads your photo library so you can add existing photos to your wardrobe.'" App/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'My Holidays reads your photo library so you can add existing photos to your wardrobe.'" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'My Holidays saves photos you take back to your photo library.'" App/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'My Holidays saves photos you take back to your photo library.'" App/Info.plist
 
       - name: Re-apply provisioning profiles after cap sync
         script: |
