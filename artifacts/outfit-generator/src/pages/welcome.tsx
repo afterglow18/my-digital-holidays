@@ -2,26 +2,28 @@
  * WelcomePage — cinematic lights-on splash screen.
  *
  * Phases:
- *   idle      — near-black room; light switch in OFF position
+ *   hero      — full-screen hero image, 2.5 s auto-advance (Phase 1)
+ *   idle      — near-black room; light switch in OFF position (Phase 2)
  *   switching — rocker flips to ON, brief pause before lights fire
  *   lighting  — 3 rapid warm-light flickers, dark overlay fades away
  *   lit       — full image holds for a beat (~300 ms)
- *   exiting   — fade to black → calls onEnter()
+ *   exiting   — fade to black → calls onEnter() (Phase 3)
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface Props { onEnter: () => void; }
 
-type Phase = "idle" | "switching" | "lighting" | "lit" | "exiting";
+type Phase = "hero" | "idle" | "switching" | "lighting" | "lit" | "exiting";
 
 // ── Timing (ms) ───────────────────────────────────────────────────────────────
+const HERO_HOLD_MS      = 2500; // Phase 1 auto-advance
+const HERO_FADE_MS      =  700; // hero→idle cross-fade
 const SWITCH_FLIP_MS    =  160; // rocker animation → then lights fire
 const LIGHT_DURATION_MS = 1900;
 const LIT_HOLD_MS       =  250;
 const EXIT_FADE_MS      =  500;
-const TOTAL_MS = SWITCH_FLIP_MS + LIGHT_DURATION_MS + LIT_HOLD_MS + EXIT_FADE_MS + 80;
 
 // ── Keyframe arrays ───────────────────────────────────────────────────────────
 const DARK_KF    = [0.97, 0.62, 0.97, 0.42, 0.97, 0.28, 0.10, 0];
@@ -37,6 +39,35 @@ const lightTrans = (kfTimes: number[]) => ({
   ease:     "linear" as const,
 });
 
+// ── Shared branding block ─────────────────────────────────────────────────────
+function Branding({ light = false }: { light?: boolean }) {
+  return (
+    <div style={{ textAlign: "center", pointerEvents: "none" }}>
+      <div style={{
+        fontFamily: "var(--font-display, serif)",
+        fontWeight: 400, fontSize: 12,
+        letterSpacing: "0.30em", textTransform: "uppercase",
+        color: light ? "rgba(255,235,190,0.70)" : "rgba(255,235,190,0.55)",
+        marginBottom: 6,
+      }}>
+        Welcome to
+      </div>
+      <div style={{
+        fontFamily: "'Dancing Script', cursive",
+        fontWeight: 700,
+        fontSize: 52,
+        lineHeight: 1.05,
+        color: "#8B1A1A",
+        textShadow: light
+          ? "0 0 24px rgba(255,160,60,0.50), 0 2px 10px rgba(0,0,0,0.70)"
+          : "0 0 32px rgba(255,180,80,0.40), 0 2px 12px rgba(0,0,0,0.60)",
+      }}>
+        My Digital Holidays
+      </div>
+    </div>
+  );
+}
+
 // ── LightSwitch component ─────────────────────────────────────────────────────
 function LightSwitch({ onFlip, disabled }: { onFlip: () => void; disabled: boolean }) {
   const [flipped, setFlipped] = useState(false);
@@ -48,44 +79,33 @@ function LightSwitch({ onFlip, disabled }: { onFlip: () => void; disabled: boole
   };
 
   return (
-    // Outer plate
     <div
       onClick={handleTap}
       role="button"
       aria-label="Turn on the lights"
       style={{
-        width: 74,
-        height: 122,
-        borderRadius: 10,
+        width: 74, height: 122, borderRadius: 10,
         background: "linear-gradient(160deg, #2e2b27 0%, #1a1814 100%)",
         border: "1.5px solid #3d3830",
         boxShadow:
           "0 8px 32px rgba(0,0,0,0.75), " +
           "inset 0 1px 0 rgba(255,255,255,0.06), " +
           "inset 0 -1px 0 rgba(0,0,0,0.4)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "space-between",
         padding: "10px 0",
         cursor: flipped ? "default" : "pointer",
-        position: "relative",
-        userSelect: "none",
+        position: "relative", userSelect: "none",
       }}
     >
-      {/* Top screw */}
       <Screw />
-
-      {/* Rocker — perspective wrapper needed for rotateX */}
       <div style={{ perspective: 220, perspectiveOrigin: "center center" }}>
         <motion.div
           initial={{ rotateX: -22 }}
           animate={{ rotateX: flipped ? 22 : -22 }}
           transition={{ duration: 0.13, ease: [0.25, 0.1, 0.25, 1] }}
           style={{
-            width: 52,
-            height: 80,
-            borderRadius: 6,
+            width: 52, height: 80, borderRadius: 6,
             transformStyle: "preserve-3d",
             background: flipped
               ? "linear-gradient(170deg, #E8D4B0 0%, #c9a066 55%, #9e6d35 100%)"
@@ -101,36 +121,22 @@ function LightSwitch({ onFlip, disabled }: { onFlip: () => void; disabled: boole
             paddingBottom: flipped ? 0 : 8,
           }}
         >
-          {/* ON / OFF label on rocker */}
           <span style={{
-            fontSize: 9,
-            fontWeight: 800,
-            letterSpacing: "0.18em",
+            fontSize: 9, fontWeight: 800, letterSpacing: "0.18em",
             color: flipped ? "rgba(60,30,5,0.7)" : "rgba(255,255,255,0.18)",
           }}>
             ENTER
           </span>
         </motion.div>
       </div>
-
-      {/* Indicator LED */}
       <motion.div
         animate={{
           background: flipped ? "#ffcc55" : "#2a2520",
-          boxShadow: flipped
-            ? "0 0 6px 2px rgba(255,200,60,0.8)"
-            : "none",
+          boxShadow: flipped ? "0 0 6px 2px rgba(255,200,60,0.8)" : "none",
         }}
         transition={{ duration: 0.08 }}
-        style={{
-          width: 7,
-          height: 7,
-          borderRadius: "50%",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
+        style={{ width: 7, height: 7, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)" }}
       />
-
-      {/* Bottom screw */}
       <Screw />
     </div>
   );
@@ -139,36 +145,29 @@ function LightSwitch({ onFlip, disabled }: { onFlip: () => void; disabled: boole
 function Screw() {
   return (
     <div style={{
-      width: 10, height: 10,
-      borderRadius: "50%",
+      width: 10, height: 10, borderRadius: "50%",
       background: "radial-gradient(circle at 35% 35%, #555, #222)",
       border: "1px solid #111",
       boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)",
-      position: "relative",
-      overflow: "hidden",
+      position: "relative", overflow: "hidden",
     }}>
-      {/* Phillips slot horizontal */}
-      <div style={{
-        position: "absolute", top: "45%", left: "15%",
-        width: "70%", height: "10%",
-        background: "rgba(0,0,0,0.55)",
-        borderRadius: 1,
-      }} />
-      {/* Phillips slot vertical */}
-      <div style={{
-        position: "absolute", left: "45%", top: "15%",
-        height: "70%", width: "10%",
-        background: "rgba(0,0,0,0.55)",
-        borderRadius: 1,
-      }} />
+      <div style={{ position: "absolute", top: "45%", left: "15%", width: "70%", height: "10%", background: "rgba(0,0,0,0.55)", borderRadius: 1 }} />
+      <div style={{ position: "absolute", left: "45%", top: "15%", height: "70%", width: "10%", background: "rgba(0,0,0,0.55)", borderRadius: 1 }} />
     </div>
   );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function WelcomePage({ onEnter }: Props) {
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase, setPhase] = useState<Phase>("hero");
   const calledRef = useRef(false);
+
+  // Phase 1 → Phase 2: auto-advance after HERO_HOLD_MS
+  useEffect(() => {
+    if (phase !== "hero") return;
+    const t = setTimeout(() => setPhase("idle"), HERO_HOLD_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   const finish = useCallback(() => {
     if (calledRef.current) return;
@@ -179,8 +178,6 @@ export default function WelcomePage({ onEnter }: Props) {
   const handleFlip = () => {
     if (phase !== "idle") return;
     setPhase("switching");
-
-    // Let the rocker animation land, then fire lights
     setTimeout(() => {
       setPhase("lighting");
       setTimeout(() => setPhase("lit"),     LIGHT_DURATION_MS);
@@ -189,9 +186,16 @@ export default function WelcomePage({ onEnter }: Props) {
     }, SWITCH_FLIP_MS);
   };
 
+  const isHero     = phase === "hero";
   const isLighting = phase === "lighting";
   const isIdle     = phase === "idle";
   const showUI     = phase === "idle" || phase === "switching";
+
+  // Dark overlay opacity: 0 during hero, 0.97 during idle/switching, animation during lighting, 0 when lit/exiting
+  const darkOpacity = isLighting ? DARK_KF : (isHero ? 0 : showUI ? 0.97 : 0);
+  const darkTransition = isLighting
+    ? lightTrans(DARK_T)
+    : { duration: isHero ? 0.1 : isIdle ? HERO_FADE_MS / 1000 : 0.05 };
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#000", overflow: "hidden" }}>
@@ -211,8 +215,8 @@ export default function WelcomePage({ onEnter }: Props) {
 
       {/* ── Layer 2: Dark overlay ── */}
       <motion.div
-        animate={{ opacity: isLighting ? DARK_KF : showUI ? 0.97 : 0 }}
-        transition={isLighting ? lightTrans(DARK_T) : { duration: 0.05 }}
+        animate={{ opacity: darkOpacity }}
+        transition={darkTransition}
         style={{ position: "absolute", inset: 0, background: "#000", pointerEvents: "none" }}
       />
 
@@ -242,58 +246,66 @@ export default function WelcomePage({ onEnter }: Props) {
         }}
       />
 
-      {/* ── Layer 4: Content ── */}
+      {/* ── Layer 4a: Hero phase — bottom gradient + branding (Phase 1) ── */}
+      <motion.div
+        animate={{ opacity: isHero ? 1 : 0 }}
+        transition={{ duration: HERO_FADE_MS / 1000 }}
+        style={{
+          position: "absolute", inset: 0, zIndex: 11,
+          pointerEvents: "none",
+        }}
+      >
+        {/* Readability gradient over lower portion */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          height: "55%",
+          background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 50%, transparent 100%)",
+          pointerEvents: "none",
+        }} />
+        {/* Branding near bottom */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          display: "flex", flexDirection: "column", alignItems: "center",
+          padding: "0 32px",
+          paddingBottom: "calc(40px + env(safe-area-inset-bottom))",
+        }}>
+          <Branding light />
+        </div>
+      </motion.div>
+
+      {/* ── Layer 4b: Idle/interactive content (Phase 2 & 3) ── */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 10,
         display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "space-between",
+        alignItems: "center", justifyContent: "flex-end",
         pointerEvents: "none",
       }}>
-        {/* Welcome text */}
-        <motion.div
-          animate={{ opacity: showUI ? 1 : 0, y: showUI ? 0 : -6 }}
-          transition={{ duration: 0.22 }}
-          style={{
-            textAlign: "center",
-            padding: "calc(14% + env(safe-area-inset-top)) 32px 0",
-            pointerEvents: "none",
-          }}
-        >
-          <div style={{
-            fontFamily: "var(--font-display, serif)",
-            fontWeight: 400, fontSize: 13,
-            letterSpacing: "0.28em", textTransform: "uppercase",
-            color: "rgba(255,235,190,0.55)", marginBottom: 8,
-          }}>
-            Welcome to
-          </div>
-          <div style={{
-            fontFamily: "'Dancing Script', cursive",
-            fontWeight: 700,
-            fontSize: 58,
-            lineHeight: 1.1,
-            color: "#8B1A1A",
-            textShadow: "0 0 32px rgba(255,180,80,0.40), 0 2px 12px rgba(0,0,0,0.60)",
-          }}>
-            My Digital Holidays
-          </div>
-        </motion.div>
-
-        {/* Bottom: switch + hint + legal */}
         <div style={{
           width: "100%", display: "flex", flexDirection: "column",
           alignItems: "center", gap: 0,
           padding: "0 32px",
           paddingBottom: "calc(28px + env(safe-area-inset-bottom))",
         }}>
+          {/* Branding */}
+          <motion.div
+            animate={{ opacity: showUI ? 1 : 0, y: showUI ? 0 : 6 }}
+            transition={{ duration: 0.28 }}
+            style={{ marginBottom: 24, pointerEvents: "none" }}
+          >
+            <Branding />
+          </motion.div>
+
+          {/* Switch + hint */}
           <motion.div
             animate={{ opacity: showUI ? 1 : 0, y: showUI ? 0 : 10 }}
             transition={{ duration: 0.2 }}
-            style={{ pointerEvents: showUI ? "auto" : "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}
+            style={{
+              pointerEvents: showUI ? "auto" : "none",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+            }}
           >
             <LightSwitch onFlip={handleFlip} disabled={!isIdle} />
 
-            {/* Tap to open — pulses while idle */}
             <motion.p
               animate={isIdle ? { opacity: [0.4, 0.8, 0.4] } : { opacity: 0 }}
               transition={isIdle
