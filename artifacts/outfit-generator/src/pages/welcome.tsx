@@ -268,14 +268,6 @@ export default function WelcomePage({ onEnter }: Props) {
           background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 50%, transparent 100%)",
           pointerEvents: "none",
         }} />
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          display: "flex", flexDirection: "column", alignItems: "center",
-          padding: "0 32px",
-          paddingBottom: "calc(40px + env(safe-area-inset-bottom))",
-        }}>
-          <Branding light />
-        </div>
       </motion.div>
 
       {/* ── Layer 4b: Idle/interactive content (Phase 2) ── */}
