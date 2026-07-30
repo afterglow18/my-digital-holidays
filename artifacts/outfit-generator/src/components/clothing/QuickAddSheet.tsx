@@ -541,7 +541,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleInputChange}
       />
