@@ -400,7 +400,7 @@ export default function WardrobePage() {
 
           {/* ── Person icon tap zone ── */}
           <button
-            onClick={() => navigate("/saved")}
+            onClick={() => navigate("/favorites")}
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
@@ -409,7 +409,7 @@ export default function WardrobePage() {
               left:   pX(ir, 0.115),
               width:  pW(ir, 0.170),
               height: pH(ir, 0.080),
-              zIndex: 25,
+              zIndex: 27,
               background: "transparent",
               border: "none",
               cursor: "pointer",
