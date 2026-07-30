@@ -400,7 +400,7 @@ export default function WardrobePage() {
 
           {/* ── Person icon tap zone ── */}
           <button
-            onClick={() => navigate("/favorites")}
+            onClick={() => navigate("/saved")}
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
