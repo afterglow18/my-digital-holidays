@@ -5,9 +5,12 @@
  *   hero      — full-screen hero image, 2.5 s auto-advance (Phase 1)
  *   idle      — near-black room; light switch in OFF position (Phase 2)
  *   switching — rocker flips to ON, brief pause before lights fire
- *   lighting  — 3 rapid warm-light flickers, dark overlay fades away
- *   lit       — full image holds for a beat (~300 ms)
- *   exiting   — fade to black → calls onEnter() (Phase 3)
+ *   lighting  — 3 rapid warm-light flickers, dark overlay fades away → reveals APP
+ *   lit       — app fully visible, short hold
+ *   exiting   — fade to warm black → onEnter() unmounts this overlay (Phase 3)
+ *
+ * App.tsx renders <Router /> behind this overlay at all times, so when the
+ * dark overlay fades to 0 during "lighting"/"lit", the live app is revealed.
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -15,14 +18,29 @@ import { motion } from "framer-motion";
 
 interface Props { onEnter: () => void; }
 
-type Phase = "hero" | "idle" | "switching" | "exiting";
+type Phase = "hero" | "idle" | "switching" | "lighting" | "lit" | "exiting";
 
 // ── Timing (ms) ───────────────────────────────────────────────────────────────
 const HERO_HOLD_MS      = 2500; // Phase 1 auto-advance
-const HERO_FADE_MS      =  700; // hero→idle cross-fade
-const SWITCH_FLIP_MS    =  160; // rocker animation → then exit fires
-const EXIT_FADE_MS      =  580; // warm black fade → onEnter (total ~740 ms)
+const HERO_FADE_MS      =  700; // hero → idle cross-fade
+const SWITCH_FLIP_MS    =  160; // rocker animation → then lights fire
+const LIGHT_DURATION_MS = 1900;
+const LIT_HOLD_MS       =  300;
+const EXIT_FADE_MS      =  500;
 
+// ── Keyframe arrays ───────────────────────────────────────────────────────────
+const DARK_KF    = [0.97, 0.62, 0.97, 0.42, 0.97, 0.28, 0.10, 0];
+const DARK_T     = [0,    0.07, 0.14, 0.21, 0.29, 0.50, 0.72, 1.0];
+const GARLAND_KF = [0, 0.90, 0.05, 0.95, 0.10, 0.70, 0.20, 0];
+const GARLAND_T  = [0, 0.07, 0.14, 0.21, 0.29, 0.50, 0.72, 1.0];
+const CANDLE_KF  = [0, 0, 0.60, 0.05, 0.80, 0.15, 0.50, 0];
+const CANDLE_T   = [0, 0.07, 0.14, 0.21, 0.29, 0.50, 0.72, 1.0];
+
+const lightTrans = (kfTimes: number[]) => ({
+  duration: LIGHT_DURATION_MS / 1000,
+  times:    kfTimes,
+  ease:     "linear" as const,
+});
 
 // ── Shared branding block ─────────────────────────────────────────────────────
 function Branding({ light = false }: { light?: boolean }) {
@@ -163,36 +181,48 @@ export default function WelcomePage({ onEnter }: Props) {
   const handleFlip = () => {
     if (phase !== "idle") return;
     setPhase("switching");
-    // Switch flip lands → immediately fade to warm black → enter app
     setTimeout(() => {
-      setPhase("exiting");
-      setTimeout(finish, EXIT_FADE_MS + 80);
+      setPhase("lighting");
+      setTimeout(() => setPhase("lit"),     LIGHT_DURATION_MS);
+      setTimeout(() => setPhase("exiting"), LIGHT_DURATION_MS + LIT_HOLD_MS);
+      setTimeout(finish,                    LIGHT_DURATION_MS + LIT_HOLD_MS + EXIT_FADE_MS + 80);
     }, SWITCH_FLIP_MS);
   };
 
-  const isHero = phase === "hero";
-  const isIdle = phase === "idle";
-  const showUI = phase === "idle" || phase === "switching";
+  const isHero     = phase === "hero";
+  const isLighting = phase === "lighting";
+  const isIdle     = phase === "idle";
+  const showUI     = phase === "idle" || phase === "switching";
 
-  // Dark overlay: transparent during hero (image fully visible), opaque during idle/switching, gone on exit (exit layer takes over)
-  const darkOpacity   = isHero ? 0 : showUI ? 0.97 : 0.97;
-  const darkTransition = { duration: isHero ? 0.1 : isIdle ? HERO_FADE_MS / 1000 : 0.05 };
+  // Dark overlay: 0 during hero (image visible), 0.97 idle/switching (near-black),
+  // flicker during lighting, 0 at lit (reveals APP behind this overlay), then exit layer takes over
+  const darkOpacity   = isLighting ? DARK_KF : (isHero ? 0 : showUI ? 0.97 : 0);
+  const darkTransition = isLighting
+    ? lightTrans(DARK_T)
+    : { duration: isHero ? 0.1 : isIdle ? HERO_FADE_MS / 1000 : 0.05 };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#000", overflow: "hidden" }}>
+    // Transparent root so the app (rendered behind by App.tsx) shows through
+    // when the dark overlay fades to 0 during the lighting animation.
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "transparent", overflow: "hidden" }}>
 
-      {/* ── Layer 1: Full-brightness hero image ── */}
-      <img
-        src="/hero-holidays.png"
-        alt="My Digital Holidays"
-        draggable={false}
-        style={{
-          position: "absolute", inset: 0,
-          width: "100%", height: "100%",
-          objectFit: "cover", objectPosition: "top center",
-          userSelect: "none", pointerEvents: "none",
-        }}
-      />
+      {/* ── Layer 1: Hero image — only visible during hero phase ── */}
+      <motion.div
+        animate={{ opacity: isHero ? 1 : 0 }}
+        transition={{ duration: HERO_FADE_MS / 1000 }}
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      >
+        <img
+          src="/hero-holidays.png"
+          alt="My Digital Holidays"
+          draggable={false}
+          style={{
+            width: "100%", height: "100%",
+            objectFit: "cover", objectPosition: "top center",
+            userSelect: "none", pointerEvents: "none",
+          }}
+        />
+      </motion.div>
 
       {/* ── Layer 2: Dark overlay ── */}
       <motion.div
@@ -201,24 +231,43 @@ export default function WelcomePage({ onEnter }: Props) {
         style={{ position: "absolute", inset: 0, background: "#000", pointerEvents: "none" }}
       />
 
-      {/* ── Layer 3: Hero phase — bottom gradient + branding (Phase 1) ── */}
-      {/* ── Layer 4a: Hero phase — bottom gradient + branding (Phase 1) ── */}
+      {/* ── Layer 3a: Garland glow ── */}
+      <motion.div
+        animate={{ opacity: isLighting ? GARLAND_KF : 0 }}
+        transition={isLighting ? lightTrans(GARLAND_T) : { duration: 0.05 }}
+        style={{
+          position: "absolute", inset: 0, mixBlendMode: "screen", pointerEvents: "none",
+          background:
+            "radial-gradient(ellipse 130% 55% at 50% 0%, " +
+            "rgba(255,230,110,0.95) 0%, rgba(255,170,50,0.65) 22%, " +
+            "rgba(255,100,20,0.25) 52%, transparent 78%)",
+        }}
+      />
+
+      {/* ── Layer 3b: Candle glow ── */}
+      <motion.div
+        animate={{ opacity: isLighting ? CANDLE_KF : 0 }}
+        transition={isLighting ? lightTrans(CANDLE_T) : { duration: 0.05 }}
+        style={{
+          position: "absolute", inset: 0, mixBlendMode: "screen", pointerEvents: "none",
+          background:
+            "radial-gradient(ellipse 70% 50% at 7% 88%, " +
+            "rgba(255,160,50,0.95) 0%, rgba(255,100,20,0.55) 28%, " +
+            "rgba(200,60,10,0.20) 58%, transparent 80%)",
+        }}
+      />
+
+      {/* ── Layer 4a: Hero phase bottom gradient + branding ── */}
       <motion.div
         animate={{ opacity: isHero ? 1 : 0 }}
         transition={{ duration: HERO_FADE_MS / 1000 }}
-        style={{
-          position: "absolute", inset: 0, zIndex: 11,
-          pointerEvents: "none",
-        }}
+        style={{ position: "absolute", inset: 0, zIndex: 11, pointerEvents: "none" }}
       >
-        {/* Readability gradient over lower portion */}
         <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          height: "55%",
+          position: "absolute", bottom: 0, left: 0, right: 0, height: "55%",
           background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 50%, transparent 100%)",
           pointerEvents: "none",
         }} />
-        {/* Branding near bottom */}
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
           display: "flex", flexDirection: "column", alignItems: "center",
@@ -229,7 +278,7 @@ export default function WelcomePage({ onEnter }: Props) {
         </div>
       </motion.div>
 
-      {/* ── Layer 4b: Idle/interactive content (Phase 2 & 3) ── */}
+      {/* ── Layer 4b: Idle/interactive content (Phase 2) ── */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 10,
         display: "flex", flexDirection: "column",
@@ -238,11 +287,11 @@ export default function WelcomePage({ onEnter }: Props) {
       }}>
         <div style={{
           width: "100%", display: "flex", flexDirection: "column",
-          alignItems: "center", gap: 0,
+          alignItems: "center",
           padding: "0 32px",
           paddingBottom: "calc(28px + env(safe-area-inset-bottom))",
         }}>
-          {/* Branding */}
+          {/* Branding above switch */}
           <motion.div
             animate={{ opacity: showUI ? 1 : 0, y: showUI ? 0 : 6 }}
             transition={{ duration: 0.28 }}
@@ -261,7 +310,6 @@ export default function WelcomePage({ onEnter }: Props) {
             }}
           >
             <LightSwitch onFlip={handleFlip} disabled={!isIdle} />
-
             <motion.p
               animate={isIdle ? { opacity: [0.4, 0.8, 0.4] } : { opacity: 0 }}
               transition={isIdle
@@ -269,11 +317,9 @@ export default function WelcomePage({ onEnter }: Props) {
                 : { duration: 0.15 }
               }
               style={{
-                margin: 0,
-                fontSize: 11, fontWeight: 500,
+                margin: 0, fontSize: 11, fontWeight: 500,
                 letterSpacing: "0.22em", textTransform: "uppercase",
-                color: "rgba(255,225,170,0.75)",
-                pointerEvents: "none",
+                color: "rgba(255,225,170,0.75)", pointerEvents: "none",
               }}
             >
               Tap to open
