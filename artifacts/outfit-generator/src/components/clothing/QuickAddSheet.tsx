@@ -221,44 +221,33 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   // Using @capacitor/camera instead of a hidden file input avoids the
   // WKWebView crash that occurs when forcing the camera through the browser's
   // file-upload mechanism on iOS.
-  const handleCameraCapture = useCallback(async () => {
+  // Shared photo picker — uses CameraSource.Prompt which shows the native iOS
+  // action sheet (Take Photo / Choose from Library / Browse). This is more
+  // stable than CameraSource.Camera which forces the camera directly and can
+  // crash in WKWebView environments.
+  const openPhotoPicker = useCallback(async (preferCamera: boolean) => {
     try {
       const photo = await Camera.getPhoto({
-        quality: 90,
+        quality: 85,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
+        source: preferCamera ? CameraSource.Prompt : CameraSource.Photos,
+        correctOrientation: true,
+        saveToGallery: false,
       });
       if (!photo.dataUrl) return;
       const blob = await fetch(photo.dataUrl).then(r => r.blob());
       handleFile(blob);
     } catch (err: unknown) {
-      // User cancelled — not an error worth surfacing
       const msg = err instanceof Error ? err.message : String(err);
-      if (!msg.toLowerCase().includes("cancel")) {
+      if (!msg.toLowerCase().includes("cancel") && !msg.toLowerCase().includes("user cancelled")) {
         setErrorMsg("Could not open camera. Please try again.");
       }
     }
   }, [handleFile]);
 
-  const handleGalleryCapture = useCallback(async () => {
-    try {
-      const photo = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Photos,
-      });
-      if (!photo.dataUrl) return;
-      const blob = await fetch(photo.dataUrl).then(r => r.blob());
-      handleFile(blob);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (!msg.toLowerCase().includes("cancel")) {
-        setErrorMsg("Could not open photo library. Please try again.");
-      }
-    }
-  }, [handleFile]);
+  const handleCameraCapture  = useCallback(() => openPhotoPicker(true),  [openPhotoPicker]);
+  const handleGalleryCapture = useCallback(() => openPhotoPicker(false), [openPhotoPicker]);
 
   if (!open) return null;
 
