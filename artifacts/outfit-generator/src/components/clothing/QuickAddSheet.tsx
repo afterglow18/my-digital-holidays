@@ -15,6 +15,7 @@
  */
 
 import React, { useRef, useState, useCallback } from "react";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { motion } from "framer-motion";
 import { X, Loader2, Check, RotateCcw } from "lucide-react";
 import {
@@ -110,9 +111,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
   // Generation counter — prevents a slow first photo from clobbering a fast second.
   const bgGenRef = useRef(0);
-
-  const cameraInputRef  = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
@@ -219,11 +217,48 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
   }, [cleanedBlob, originalBlob, category, existingCount, createItem, queryClient, onCreated, handleClose]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-    e.target.value = "";
-  };
+  // ── Native camera / gallery via Capacitor plugin ───────────────────────────
+  // Using @capacitor/camera instead of a hidden file input avoids the
+  // WKWebView crash that occurs when forcing the camera through the browser's
+  // file-upload mechanism on iOS.
+  const handleCameraCapture = useCallback(async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+      if (!photo.dataUrl) return;
+      const blob = await fetch(photo.dataUrl).then(r => r.blob());
+      handleFile(blob);
+    } catch (err: unknown) {
+      // User cancelled — not an error worth surfacing
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.toLowerCase().includes("cancel")) {
+        setErrorMsg("Could not open camera. Please try again.");
+      }
+    }
+  }, [handleFile]);
+
+  const handleGalleryCapture = useCallback(async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Photos,
+      });
+      if (!photo.dataUrl) return;
+      const blob = await fetch(photo.dataUrl).then(r => r.blob());
+      handleFile(blob);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.toLowerCase().includes("cancel")) {
+        setErrorMsg("Could not open photo library. Please try again.");
+      }
+    }
+  }, [handleFile]);
 
   if (!open) return null;
 
@@ -285,7 +320,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             {/* Two big action buttons */}
             <div style={{ display: "flex", gap: 12 }}>
               <button
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={handleCameraCapture}
                 style={{
                   flex: 1, display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 0",
@@ -305,7 +340,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </button>
 
               <button
-                onClick={() => galleryInputRef.current?.click()}
+                onClick={handleGalleryCapture}
                 style={{
                   flex: 1, display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 0",
@@ -536,21 +571,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
       </div>
 
-      {/* Hidden file inputs — single file each (one at a time for preview flow) */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleInputChange}
-      />
-      <input
-        ref={galleryInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleInputChange}
-      />
     </motion.div>
   );
 }
