@@ -153,6 +153,10 @@ workflows:
             DEVELOPMENT_TEAM=2A78MFVCJS \
             CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="My Digital Holidays AppStore" \
+            INFOPLIST_KEY_NSCameraUsageDescription="My Holidays uses your camera to photograph items for your wardrobe." \
+            INFOPLIST_KEY_NSPhotoLibraryUsageDescription="My Holidays reads your photo library so you can add existing photos to your wardrobe." \
+            INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription="My Holidays saves photos you take back to your photo library." \
+            INFOPLIST_KEY_NSFaceIDUsageDescription="My Digital Holidays uses Face ID to protect your wardrobe." \
             -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
             archive
 
