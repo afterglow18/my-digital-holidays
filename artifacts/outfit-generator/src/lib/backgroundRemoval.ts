@@ -1,24 +1,22 @@
-import { removeBackground as imglyRemoveBackground } from "@imgly/background-removal";
-
 /**
- * WHY the three-part ORT configuration below:
+ * WHY everything here uses dynamic import():
  *
- * 1. Object.defineProperty to lock wasm.proxy = true
+ * 1. @imgly/background-removal static import spins up WASM workers immediately
+ *    at module parse time. On iOS WKWebView (TestFlight), this causes memory
+ *    pressure *before* the user even opens the camera, causing a crash when iOS
+ *    tries to allocate the camera GPU buffer. Dynamic import defers all WASM
+ *    allocation until after a photo has already been taken.
+ *
+ * 2. Object.defineProperty to lock wasm.proxy = true
  *    @imgly/background-removal internally sets ort.env.wasm.proxy = false right before
  *    it creates the ONNX inference session (it only enables the proxy when WebGPU is
  *    available, which it isn't on iOS Safari / WKWebView). Using defineProperty with a
  *    no-op setter means that write is silently ignored and the value stays true.
  *    ONNX Runtime then runs inference in a sub-worker, freeing the main thread.
  *
- * 2. numThreads = 1
+ * 3. numThreads = 1
  *    iOS Safari has no SharedArrayBuffer, which WASM multithreading requires.
  *    Leaving threads > 1 causes a silent crash. Single-threaded avoids it.
- *
- * 3. Dynamic import() instead of top-level
- *    Importing onnxruntime-web at module parse time triggers Vite's dependency
- *    pre-bundling mid-session, causing a full page reload that corrupts React's
- *    internal dispatcher. Importing it dynamically inside the function means it
- *    only loads the moment inference is first requested — after everything is stable.
  */
 
 let ortConfigured = false;
@@ -45,14 +43,18 @@ async function configureOrt() {
  * Remove the background from a JPEG/PNG base64 data-URL.
  * Returns a PNG data-URL with transparent background.
  *
- * Inference runs in a Web Worker (wasm.proxy = true) so the main thread stays
- * responsive — buttons and React updates continue to work during processing.
+ * Both @imgly/background-removal AND onnxruntime-web are imported dynamically
+ * so zero WASM workers are created before the user actually takes a photo.
+ * This prevents the iOS WKWebView camera crash caused by WASM memory pressure.
  *
  * On first call: downloads the ~15 MB isnet_fp16 ONNX model from the imgly CDN
  * (cached by WKWebView after that). Throws on network error or unreadable image.
  */
 export async function removeBackground(dataUrl: string): Promise<string> {
   await configureOrt();
+
+  // Dynamic import — defers ALL WASM/worker allocation until after photo is taken.
+  const { removeBackground: imglyRemoveBackground } = await import("@imgly/background-removal");
 
   const sourceBlob = await dataUrlToBlob(dataUrl);
   const resultBlob = await imglyRemoveBackground(sourceBlob, {
