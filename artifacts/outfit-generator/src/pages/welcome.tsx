@@ -15,29 +15,14 @@ import { motion } from "framer-motion";
 
 interface Props { onEnter: () => void; }
 
-type Phase = "hero" | "idle" | "switching" | "lighting" | "lit" | "exiting";
+type Phase = "hero" | "idle" | "switching" | "exiting";
 
 // ── Timing (ms) ───────────────────────────────────────────────────────────────
 const HERO_HOLD_MS      = 2500; // Phase 1 auto-advance
 const HERO_FADE_MS      =  700; // hero→idle cross-fade
-const SWITCH_FLIP_MS    =  160; // rocker animation → then lights fire
-const LIGHT_DURATION_MS = 1900;
-const LIT_HOLD_MS       =  250;
-const EXIT_FADE_MS      =  500;
+const SWITCH_FLIP_MS    =  160; // rocker animation → then exit fires
+const EXIT_FADE_MS      =  580; // warm black fade → onEnter (total ~740 ms)
 
-// ── Keyframe arrays ───────────────────────────────────────────────────────────
-const DARK_KF    = [0.97, 0.62, 0.97, 0.42, 0.97, 0.28, 0.10, 0];
-const DARK_T     = [0,    0.07, 0.14, 0.21, 0.29, 0.50, 0.72, 1.0];
-const GARLAND_KF = [0, 0.90, 0.05, 0.95, 0.10, 0.70, 0.20, 0];
-const GARLAND_T  = [0, 0.07, 0.14, 0.21, 0.29, 0.50, 0.72, 1.0];
-const CANDLE_KF  = [0, 0, 0.60, 0.05, 0.80, 0.15, 0.50, 0];
-const CANDLE_T   = [0, 0.07, 0.14, 0.21, 0.29, 0.50, 0.72, 1.0];
-
-const lightTrans = (kfTimes: number[]) => ({
-  duration: LIGHT_DURATION_MS / 1000,
-  times:    kfTimes,
-  ease:     "linear" as const,
-});
 
 // ── Shared branding block ─────────────────────────────────────────────────────
 function Branding({ light = false }: { light?: boolean }) {
@@ -178,24 +163,20 @@ export default function WelcomePage({ onEnter }: Props) {
   const handleFlip = () => {
     if (phase !== "idle") return;
     setPhase("switching");
+    // Switch flip lands → immediately fade to warm black → enter app
     setTimeout(() => {
-      setPhase("lighting");
-      setTimeout(() => setPhase("lit"),     LIGHT_DURATION_MS);
-      setTimeout(() => setPhase("exiting"), LIGHT_DURATION_MS + LIT_HOLD_MS);
-      setTimeout(finish,                    LIGHT_DURATION_MS + LIT_HOLD_MS + EXIT_FADE_MS + 80);
+      setPhase("exiting");
+      setTimeout(finish, EXIT_FADE_MS + 80);
     }, SWITCH_FLIP_MS);
   };
 
-  const isHero     = phase === "hero";
-  const isLighting = phase === "lighting";
-  const isIdle     = phase === "idle";
-  const showUI     = phase === "idle" || phase === "switching";
+  const isHero = phase === "hero";
+  const isIdle = phase === "idle";
+  const showUI = phase === "idle" || phase === "switching";
 
-  // Dark overlay opacity: 0 during hero, 0.97 during idle/switching, animation during lighting, 0 when lit/exiting
-  const darkOpacity = isLighting ? DARK_KF : (isHero ? 0 : showUI ? 0.97 : 0);
-  const darkTransition = isLighting
-    ? lightTrans(DARK_T)
-    : { duration: isHero ? 0.1 : isIdle ? HERO_FADE_MS / 1000 : 0.05 };
+  // Dark overlay: transparent during hero (image fully visible), opaque during idle/switching, gone on exit (exit layer takes over)
+  const darkOpacity   = isHero ? 0 : showUI ? 0.97 : 0.97;
+  const darkTransition = { duration: isHero ? 0.1 : isIdle ? HERO_FADE_MS / 1000 : 0.05 };
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#000", overflow: "hidden" }}>
@@ -220,32 +201,7 @@ export default function WelcomePage({ onEnter }: Props) {
         style={{ position: "absolute", inset: 0, background: "#000", pointerEvents: "none" }}
       />
 
-      {/* ── Layer 3a: Garland glow ── */}
-      <motion.div
-        animate={{ opacity: isLighting ? GARLAND_KF : 0 }}
-        transition={isLighting ? lightTrans(GARLAND_T) : { duration: 0.05 }}
-        style={{
-          position: "absolute", inset: 0, mixBlendMode: "screen", pointerEvents: "none",
-          background:
-            "radial-gradient(ellipse 130% 55% at 50% 0%, " +
-            "rgba(255,230,110,0.95) 0%, rgba(255,170,50,0.65) 22%, " +
-            "rgba(255,100,20,0.25) 52%, transparent 78%)",
-        }}
-      />
-
-      {/* ── Layer 3b: Candle glow ── */}
-      <motion.div
-        animate={{ opacity: isLighting ? CANDLE_KF : 0 }}
-        transition={isLighting ? lightTrans(CANDLE_T) : { duration: 0.05 }}
-        style={{
-          position: "absolute", inset: 0, mixBlendMode: "screen", pointerEvents: "none",
-          background:
-            "radial-gradient(ellipse 70% 50% at 7% 88%, " +
-            "rgba(255,160,50,0.95) 0%, rgba(255,100,20,0.55) 28%, " +
-            "rgba(200,60,10,0.20) 58%, transparent 80%)",
-        }}
-      />
-
+      {/* ── Layer 3: Hero phase — bottom gradient + branding (Phase 1) ── */}
       {/* ── Layer 4a: Hero phase — bottom gradient + branding (Phase 1) ── */}
       <motion.div
         animate={{ opacity: isHero ? 1 : 0 }}
