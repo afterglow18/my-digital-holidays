@@ -134,6 +134,16 @@ export function UpgradeSheet({ reason, onClose }: Props) {
   const [status,   setStatus]   = useState<"idle" | "pending">("idle");
   const [error,    setError]    = useState<string | null>(null);
 
+  // Hard cap: never show LOADING for more than 3 s regardless of RC state.
+  // If RC takes longer the user can still tap (fallback prices are shown).
+  const [cappedLoading, setCappedLoading] = useState(isLoading);
+  React.useEffect(() => {
+    if (!isLoading) { setCappedLoading(false); return; }
+    setCappedLoading(true);
+    const t = setTimeout(() => setCappedLoading(false), 3000);
+    return () => clearTimeout(t);
+  }, [isLoading]);
+
   const prices: Record<TierId, string> = {
     monthly:  getLivePrice(offerings, "$rc_monthly",  "$1.99"),
     yearly:   getLivePrice(offerings, "$rc_annual",   "$19.99"),
@@ -141,14 +151,14 @@ export function UpgradeSheet({ reason, onClose }: Props) {
   };
 
   const ctaLabel =
-    isLoading               ? "Loading…"
+    cappedLoading           ? "Loading…"
     : status === "pending"  ? "Opening…"
     : selected === "lifetime" ? `UNLOCK FOREVER – ${prices.lifetime} ›`
     : selected === "yearly"   ? `SUBSCRIBE – ${prices.yearly}/YR ›`
     :                           `SUBSCRIBE – ${prices.monthly}/MO ›`;
 
   const handlePurchase = useCallback(async () => {
-    if (status === "pending" || isLoading) return;
+    if (status === "pending" || cappedLoading) return;
     setError(null);
     setStatus("pending");
     const pkg = getRcPackage(offerings, TIER_DEFAULTS[selected].pkgId);
@@ -280,13 +290,13 @@ export function UpgradeSheet({ reason, onClose }: Props) {
       >
         <button
           onClick={handlePurchase}
-          disabled={status === "pending" || isLoading}
+          disabled={status === "pending" || cappedLoading}
           className="w-full py-3.5 rounded-2xl font-display font-bold text-lg uppercase
                      tracking-tight border-[3px] border-black text-black
                      active:translate-x-0.5 active:translate-y-0.5 transition-all
                      disabled:opacity-60 disabled:cursor-not-allowed bg-primary"
           style={{
-            boxShadow: (status === "pending" || isLoading) ? "none" : "4px 4px 0px 0px rgba(0,0,0,1)",
+            boxShadow: (status === "pending" || cappedLoading) ? "none" : "4px 4px 0px 0px rgba(0,0,0,1)",
           }}
         >
           {ctaLabel}

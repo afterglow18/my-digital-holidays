@@ -134,7 +134,7 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      const result = await withTimeout(Purchases.getCustomerInfo(), 12_000);
+      const result = await withTimeout(Purchases.getCustomerInfo(), 5000);
       return result?.customerInfo ?? null;
     },
     staleTime: 0,
@@ -147,7 +147,7 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      const result = await withTimeout(Purchases.getOfferings(), 12_000);
+      const result = await withTimeout(Purchases.getOfferings(), 5000);
       if (!result) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (result as any).offerings ?? result ?? null;
