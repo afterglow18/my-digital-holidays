@@ -85,9 +85,13 @@ export function initializeRevenueCat(): Promise<void> {
   return _rcInitPromise;
 }
 
-/** Resolves once configure() is done (or immediately on web). */
+/** Resolves once configure() is done — or after 8 s if it hangs. */
 async function awaitRcReady(): Promise<void> {
-  if (_rcInitPromise) await _rcInitPromise.catch(() => {});
+  if (!_rcInitPromise) return;
+  await Promise.race([
+    _rcInitPromise.catch(() => {}),
+    new Promise<void>((resolve) => setTimeout(resolve, 8_000)),
+  ]);
 }
 
 // ── Query key ─────────────────────────────────────────────────────────────────
