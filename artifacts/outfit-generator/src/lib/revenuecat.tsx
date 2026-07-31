@@ -16,7 +16,7 @@
  *      — this catches refunds, expirations, and subscription lapses in real-time.
  */
 
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -81,17 +81,39 @@ export function initializeRevenueCat(): Promise<void> {
 
     await Purchases.configure({ apiKey });
     console.log("[RevenueCat] Configured");
-  })();
+  })().finally(() => notifyRcSettled());
   return _rcInitPromise;
 }
 
-/** Resolves once configure() is done — or after 8 s if it hangs. */
-async function awaitRcReady(): Promise<void> {
-  if (!_rcInitPromise) return;
-  await Promise.race([
-    _rcInitPromise.catch(() => {}),
-    new Promise<void>((resolve) => setTimeout(resolve, 8_000)),
-  ]);
+// ── RC readiness signal ───────────────────────────────────────────────────────
+// Tracks whether configure() has settled (or timed out) so React queries can
+// gate on it via `enabled` rather than blocking inside `queryFn`.
+
+let _rcSettled = false;
+const _rcSettledCallbacks: Array<() => void> = [];
+
+function notifyRcSettled() {
+  if (_rcSettled) return;
+  _rcSettled = true;
+  _rcSettledCallbacks.splice(0).forEach((cb) => cb());
+}
+
+/** React hook — returns true once RC has configured (or after 8 s timeout). */
+function useRcReady(): boolean {
+  const [ready, setReady] = useState(_rcSettled);
+  useEffect(() => {
+    if (_rcSettled) { setReady(true); return; }
+    const onReady = () => setReady(true);
+    _rcSettledCallbacks.push(onReady);
+    // 8 s hard fallback — unblocks queries even if configure() never settles
+    const t = setTimeout(() => { notifyRcSettled(); }, 8_000);
+    return () => {
+      clearTimeout(t);
+      const i = _rcSettledCallbacks.indexOf(onReady);
+      if (i !== -1) _rcSettledCallbacks.splice(i, 1);
+    };
+  }, []);
+  return ready;
 }
 
 // ── Query key ─────────────────────────────────────────────────────────────────
@@ -102,15 +124,16 @@ const CUSTOMER_INFO_KEY = ["revenuecat", "customer-info"] as const;
 
 function useSubscriptionContext() {
   const qc = useQueryClient();
+  // Gate both queries on RC being configured (or 8 s timeout elapsed).
+  // While rcReady is false, isLoading stays false — button shows fallback prices.
+  const rcReady = useRcReady();
 
-  // staleTime: 0 — always considered stale so every mount/focus triggers a
-  // fresh fetch. The foreground listener below handles mid-session refreshes.
   const customerInfoQuery = useQuery({
     queryKey: CUSTOMER_INFO_KEY,
+    enabled: rcReady,
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      await awaitRcReady(); // ensure configure() has finished first
       const result = await withTimeout(Purchases.getCustomerInfo(), 12_000);
       return result?.customerInfo ?? null;
     },
@@ -120,10 +143,10 @@ function useSubscriptionContext() {
 
   const offeringsQuery = useQuery({
     queryKey: ["revenuecat", "offerings"],
+    enabled: rcReady,
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      await awaitRcReady(); // ensure configure() has finished first
       const result = await withTimeout(Purchases.getOfferings(), 12_000);
       if (!result) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
