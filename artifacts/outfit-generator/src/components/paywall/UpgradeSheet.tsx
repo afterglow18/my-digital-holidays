@@ -155,7 +155,11 @@ export function UpgradeSheet({ reason, onClose }: Props) {
     const pkg = getRcPackage(offerings, TIER_DEFAULTS[plan].pkgId);
     if (!pkg) {
       setStatus("idle");
-      setError("Subscription products couldn't be loaded. Check your connection and try again.");
+      setError(
+        offerings
+          ? "Subscription products couldn't be loaded. Check your connection and try again."
+          : "Could not reach the App Store. Check your connection and tap again."
+      );
       return;
     }
     purchase(pkg)

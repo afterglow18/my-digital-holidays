@@ -168,21 +168,30 @@ function useSubscriptionContext() {
     queryKey: ["revenuecat", "offerings"],
     enabled: rcReady,
     queryFn: async () => {
-      console.log("[RC] getOfferings() — starting (30 s timeout)");
+      console.log("[RC] getOfferings() — starting (12 s timeout)");
       const Purchases = await getPurchases();
       if (!Purchases) { console.log("[RC] getOfferings() — no Purchases, returning null"); return null; }
-      // 30 s — RC must fetch from its servers then StoreKit; 5 s was too short.
-      const result = await withTimeout(Purchases.getOfferings(), 30000);
+      let result: Awaited<ReturnType<typeof Purchases.getOfferings>> | null;
+      try {
+        // 12 s — enough for RC + StoreKit on any network; short enough to
+        // surface a fast error to the user instead of a 30 s blank wait.
+        result = await withTimeout(Purchases.getOfferings(), 12000);
+      } catch (e) {
+        console.error("[RC] getOfferings() — threw:", e);
+        return null;
+      }
       if (!result) { console.warn("[RC] getOfferings() — timed out or returned null"); return null; }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = (result as any).offerings ?? result ?? null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const pkgs = data?.current?.availablePackages ?? [];
       console.log("[RC] getOfferings() — success ✓  current offering:", data?.current?.identifier ?? "none",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         "  packages:", pkgs.map((p: any) => p.identifier).join(", ") || "none");
       return data;
     },
     staleTime: 300 * 1000,
-    retry: false,
+    retry: 1,
   });
 
   // ── Foreground + server-push listeners ─────────────────────────────────────
