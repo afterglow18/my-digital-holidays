@@ -121,21 +121,31 @@ function notifyRcSettled() {
   _rcSettledCallbacks.splice(0).forEach((cb) => cb());
 }
 
-/** React hook — returns true once RC has configured (or after 8 s timeout). */
+/** React hook — returns true once RC has configured (or immediately on native).
+ *
+ * On native we start queries immediately and let RC's native SDK handle
+ * internal sequencing — this avoids issues where the JS-side settle signal
+ * never fires (e.g. configure() hangs before .finally() runs).
+ */
 function useRcReady(): boolean {
-  const [ready, setReady] = useState(_rcSettled);
+  // On native: always ready immediately — RC's native layer queues calls
+  // made before configure() finishes and processes them once it does.
+  // In browser: wait for settle signal (or 3 s fallback) so we don't
+  // attempt bridge calls in a non-native context.
+  const isNative = Capacitor.isNativePlatform();
+  const [ready, setReady] = useState(isNative || _rcSettled);
   useEffect(() => {
-    if (_rcSettled) { setReady(true); return; }
+    if (isNative || _rcSettled) { setReady(true); return; }
     const onReady = () => setReady(true);
     _rcSettledCallbacks.push(onReady);
-    // 8 s hard fallback — unblocks queries even if configure() never settles
-    const t = setTimeout(() => { notifyRcSettled(); }, 8_000);
+    // 3 s fallback for browser/web context
+    const t = setTimeout(() => { notifyRcSettled(); }, 3_000);
     return () => {
       clearTimeout(t);
       const i = _rcSettledCallbacks.indexOf(onReady);
       if (i !== -1) _rcSettledCallbacks.splice(i, 1);
     };
-  }, []);
+  }, [isNative]);
   return ready;
 }
 
@@ -294,6 +304,7 @@ function useSubscriptionContext() {
     // ── Debug info — remove once RC is confirmed working ───────────────────
     rcDebug: {
       offeringsStatus:  offeringsQuery.status,
+      fetchStatus:      offeringsQuery.fetchStatus,
       offeringsError:   offeringsQuery.error ? String(offeringsQuery.error) : null,
       packageCount:     (offeringsQuery.data as any)?.current?.availablePackages?.length ?? 0,
     },

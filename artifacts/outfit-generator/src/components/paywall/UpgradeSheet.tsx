@@ -344,8 +344,8 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
         {/* ── RC debug panel — REMOVE once purchases confirmed working ── */}
         <div className="rounded-lg bg-black/5 px-3 py-2 text-[10px] font-mono text-black/50 leading-relaxed">
-          <div>RC offerings: <span className="text-black/70 font-bold">{rcDebug.offeringsStatus}</span></div>
-          <div>Packages found: <span className="text-black/70 font-bold">{rcDebug.packageCount}</span></div>
+          <div>RC: <span className="text-black/70 font-bold">{rcDebug.offeringsStatus}</span> / <span className="text-black/70 font-bold">{rcDebug.fetchStatus}</span></div>
+          <div>Packages: <span className="text-black/70 font-bold">{rcDebug.packageCount}</span></div>
           {rcDebug.offeringsError && (
             <div className="text-red-500 break-all">Err: {rcDebug.offeringsError}</div>
           )}
