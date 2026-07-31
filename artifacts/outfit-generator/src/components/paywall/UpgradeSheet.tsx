@@ -129,7 +129,7 @@ function openUrl(url: string) {
 }
 
 export function UpgradeSheet({ reason, onClose }: Props) {
-  const { offerings, purchase, restore, isRestoring, isLoading, isOfferingsReady } = useSubscription();
+  const { offerings, purchase, restore, isRestoring, isLoading, isOfferingsReady, rcDebug } = useSubscription();
   const [selected, setSelected] = useState<TierId>("lifetime");
   const [status,   setStatus]   = useState<"idle" | "pending">("idle");
   const [error,    setError]    = useState<string | null>(null);
@@ -341,6 +341,15 @@ export function UpgradeSheet({ reason, onClose }: Props) {
             {error}
           </p>
         )}
+
+        {/* ── RC debug panel — REMOVE once purchases confirmed working ── */}
+        <div className="rounded-lg bg-black/5 px-3 py-2 text-[10px] font-mono text-black/50 leading-relaxed">
+          <div>RC offerings: <span className="text-black/70 font-bold">{rcDebug.offeringsStatus}</span></div>
+          <div>Packages found: <span className="text-black/70 font-bold">{rcDebug.packageCount}</span></div>
+          {rcDebug.offeringsError && (
+            <div className="text-red-500 break-all">Err: {rcDebug.offeringsError}</div>
+          )}
+        </div>
 
         <button
           onClick={onClose}
