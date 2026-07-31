@@ -9,7 +9,7 @@
  *   $rc_annual    → Yearly   $19.99
  *   $rc_lifetime  → Lifetime $9.99 (one-time)
  */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { useSubscription } from "@/lib/revenuecat";
@@ -137,12 +137,36 @@ export function UpgradeSheet({ reason, onClose }: Props) {
   // Hard cap: never show LOADING for more than 3 s regardless of RC state.
   // If RC takes longer the user can still tap (fallback prices are shown).
   const [cappedLoading, setCappedLoading] = useState(isLoading);
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoading) { setCappedLoading(false); return; }
     setCappedLoading(true);
     const t = setTimeout(() => setCappedLoading(false), 3000);
     return () => clearTimeout(t);
   }, [isLoading]);
+
+  // Queued purchase — if user taps before offerings load, we store the intent
+  // here and auto-proceed the moment offerings resolve (avoids the "still
+  // loading" error and keeps "Opening…" on the button the whole time).
+  const pendingPlanRef = useRef<TierId | null>(null);
+  useEffect(() => {
+    if (!isOfferingsReady || pendingPlanRef.current === null) return;
+    const plan = pendingPlanRef.current;
+    pendingPlanRef.current = null;
+    const pkg = getRcPackage(offerings, TIER_DEFAULTS[plan].pkgId);
+    if (!pkg) {
+      setStatus("idle");
+      setError("Subscription products couldn't be loaded. Check your connection and try again.");
+      return;
+    }
+    purchase(pkg)
+      .then(() => onClose())
+      .catch((err: unknown) => {
+        setStatus("idle");
+        const msg = err instanceof Error ? err.message.toLowerCase() : "";
+        if (msg.includes("cancel") || msg.includes("dismiss")) return;
+        setError("Something went wrong. Please try again.");
+      });
+  }, [isOfferingsReady, offerings, purchase, onClose]);
 
   const prices: Record<TierId, string> = {
     monthly:  getLivePrice(offerings, "$rc_monthly",  "$1.99"),
@@ -163,12 +187,14 @@ export function UpgradeSheet({ reason, onClose }: Props) {
     setStatus("pending");
     const pkg = getRcPackage(offerings, TIER_DEFAULTS[selected].pkgId);
     if (!pkg) {
+      if (!isOfferingsReady) {
+        // Queue it — the useEffect above will fire when offerings resolve
+        // and complete the purchase automatically. Button stays "Opening…".
+        pendingPlanRef.current = selected;
+        return;
+      }
       setStatus("idle");
-      setError(
-        isOfferingsReady
-          ? "Subscription products couldn't be loaded. Check your connection and try again."
-          : "Plans are still loading — please wait a few seconds and try again."
-      );
+      setError("Subscription products couldn't be loaded. Check your connection and try again.");
       return;
     }
     try {
