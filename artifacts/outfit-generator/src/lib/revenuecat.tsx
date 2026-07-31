@@ -40,13 +40,25 @@ function getApiKey(): string {
 
 // ── Timeout helper ────────────────────────────────────────────────────────────
 
+// WKWebView (Capacitor iOS) throttles long setTimeout calls heavily.
+// Use a 1-second setInterval polling loop instead — short intervals are
+// throttled much less aggressively and reliably fire even with active
+// native bridge calls pending.
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)
-    ),
-  ]);
+  return new Promise<T>((resolve, reject) => {
+    let done = false;
+    const start = Date.now();
+    promise
+      .then((v) => { done = true; resolve(v); })
+      .catch((e) => { done = true; reject(e as Error); });
+    const iv = setInterval(() => {
+      if (done) { clearInterval(iv); return; }
+      if (Date.now() - start >= ms) {
+        clearInterval(iv);
+        reject(new Error(`RC getOfferings timed out after ${ms}ms`));
+      }
+    }, 1000);
+  });
 }
 
 // ── Lazy-import Purchases so it doesn't crash in the browser ─────────────────
