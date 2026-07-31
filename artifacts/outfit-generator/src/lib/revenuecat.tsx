@@ -34,6 +34,15 @@ function getApiKey(): string {
   throw new Error("RevenueCat API key not configured");
 }
 
+// ── Timeout helper ────────────────────────────────────────────────────────────
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 // ── Lazy-import Purchases so it doesn't crash in the browser ─────────────────
 
 type PurchasesType = typeof import("@revenuecat/purchases-capacitor").Purchases;
@@ -84,8 +93,10 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      const { customerInfo } = await Purchases.getCustomerInfo();
-      return customerInfo;
+      // 12 s timeout — if RC SDK hangs (unconfigured / no network) resolve null
+      // so the rest of the UI doesn't stay stuck on "Loading…" forever.
+      const result = await withTimeout(Purchases.getCustomerInfo(), 12_000);
+      return result?.customerInfo ?? null;
     },
     staleTime: 0,
     retry: false,
@@ -96,7 +107,9 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      const result = await Purchases.getOfferings();
+      // 12 s timeout — resolves null on hang so button becomes tappable.
+      const result = await withTimeout(Purchases.getOfferings(), 12_000);
+      if (!result) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (result as any).offerings ?? result ?? null;
     },
