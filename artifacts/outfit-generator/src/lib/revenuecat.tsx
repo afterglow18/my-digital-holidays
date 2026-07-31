@@ -73,19 +73,38 @@ let _rcInitPromise: Promise<void> | null = null;
 export function initializeRevenueCat(): Promise<void> {
   if (_rcInitPromise) return _rcInitPromise;
   _rcInitPromise = (async () => {
+    console.log("[RC] initializeRevenueCat() start — isNative:", Capacitor.isNativePlatform());
     const Purchases = await getPurchases();
-    if (!Purchases) return;
+    if (!Purchases) {
+      console.log("[RC] getPurchases() returned null — not native, skipping");
+      return;
+    }
 
-    const apiKey = getApiKey();
+    let apiKey: string;
+    try {
+      apiKey = getApiKey();
+      console.log("[RC] Using API key:", apiKey.slice(0, 12) + "…");
+    } catch (e) {
+      console.error("[RC] getApiKey() threw — no key available:", e);
+      throw e;
+    }
 
     try {
       const { LOG_LEVEL } = await import("@revenuecat/purchases-capacitor");
       await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
     } catch { /* non-fatal */ }
 
-    await Purchases.configure({ apiKey });
-    console.log("[RevenueCat] Configured");
-  })().finally(() => notifyRcSettled());
+    try {
+      await Purchases.configure({ apiKey });
+      console.log("[RC] configure() succeeded ✓");
+    } catch (e) {
+      console.error("[RC] configure() threw:", e);
+      throw e;
+    }
+  })().finally(() => {
+    console.log("[RC] initializeRevenueCat() settled — notifying");
+    notifyRcSettled();
+  });
   return _rcInitPromise;
 }
 
@@ -149,13 +168,18 @@ function useSubscriptionContext() {
     queryKey: ["revenuecat", "offerings"],
     enabled: rcReady,
     queryFn: async () => {
+      console.log("[RC] getOfferings() — starting (30 s timeout)");
       const Purchases = await getPurchases();
-      if (!Purchases) return null;
+      if (!Purchases) { console.log("[RC] getOfferings() — no Purchases, returning null"); return null; }
       // 30 s — RC must fetch from its servers then StoreKit; 5 s was too short.
       const result = await withTimeout(Purchases.getOfferings(), 30000);
-      if (!result) return null;
+      if (!result) { console.warn("[RC] getOfferings() — timed out or returned null"); return null; }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (result as any).offerings ?? result ?? null;
+      const data = (result as any).offerings ?? result ?? null;
+      const pkgs = data?.current?.availablePackages ?? [];
+      console.log("[RC] getOfferings() — success ✓  current offering:", data?.current?.identifier ?? "none",
+        "  packages:", pkgs.map((p: any) => p.identifier).join(", ") || "none");
+      return data;
     },
     staleTime: 300 * 1000,
     retry: false,
