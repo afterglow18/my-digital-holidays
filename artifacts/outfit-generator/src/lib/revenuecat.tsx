@@ -315,13 +315,6 @@ function useSubscriptionContext() {
     isPurchasing:  purchaseMutation.isPending,
     isRestoring:   restoreMutation.isPending,
     purchaseError: purchaseMutation.error as Error | null,
-    // ── Debug info — remove once RC is confirmed working ───────────────────
-    rcDebug: {
-      offeringsStatus:  offeringsQuery.status,
-      fetchStatus:      offeringsQuery.fetchStatus,
-      offeringsError:   offeringsQuery.error ? String(offeringsQuery.error) : null,
-      packageCount:     (offeringsQuery.data as any)?.current?.availablePackages?.length ?? 0,
-    },
   };
 }
 
