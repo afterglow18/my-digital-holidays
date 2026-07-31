@@ -10,8 +10,6 @@
 #
 # Group "build_env":
 #   VITE_API_BASE_URL                  Your deployed API URL
-#
-# REQUIRED — add as a Codemagic secret (Secure checkbox ON):
 #   VITE_REVENUECAT_IOS_KEY            RevenueCat iOS public API key (appl_…)
 
 workflows:
@@ -28,6 +26,7 @@ workflows:
       node: 22
       groups:
         - signing
+        - build_env
       vars:
         VITE_API_BASE_URL: https://my-digital-holidays.replit.app/api
         XCODE_SCHEME: App
