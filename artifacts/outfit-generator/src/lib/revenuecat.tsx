@@ -61,20 +61,33 @@ async function getPurchases(): Promise<PurchasesType | null> {
 }
 
 // ── Initialization ────────────────────────────────────────────────────────────
+// The promise is stored so queries can await it — this prevents the race where
+// getOfferings() / getCustomerInfo() run before configure() has finished.
 
-export async function initializeRevenueCat(): Promise<void> {
-  const Purchases = await getPurchases();
-  if (!Purchases) return;
+let _rcInitPromise: Promise<void> | null = null;
 
-  const apiKey = getApiKey();
+export function initializeRevenueCat(): Promise<void> {
+  if (_rcInitPromise) return _rcInitPromise;
+  _rcInitPromise = (async () => {
+    const Purchases = await getPurchases();
+    if (!Purchases) return;
 
-  try {
-    const { LOG_LEVEL } = await import("@revenuecat/purchases-capacitor");
-    await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-  } catch { /* non-fatal */ }
+    const apiKey = getApiKey();
 
-  await Purchases.configure({ apiKey });
-  console.log("[RevenueCat] Configured");
+    try {
+      const { LOG_LEVEL } = await import("@revenuecat/purchases-capacitor");
+      await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
+    } catch { /* non-fatal */ }
+
+    await Purchases.configure({ apiKey });
+    console.log("[RevenueCat] Configured");
+  })();
+  return _rcInitPromise;
+}
+
+/** Resolves once configure() is done (or immediately on web). */
+async function awaitRcReady(): Promise<void> {
+  if (_rcInitPromise) await _rcInitPromise.catch(() => {});
 }
 
 // ── Query key ─────────────────────────────────────────────────────────────────
@@ -93,8 +106,7 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      // 12 s timeout — if RC SDK hangs (unconfigured / no network) resolve null
-      // so the rest of the UI doesn't stay stuck on "Loading…" forever.
+      await awaitRcReady(); // ensure configure() has finished first
       const result = await withTimeout(Purchases.getCustomerInfo(), 12_000);
       return result?.customerInfo ?? null;
     },
@@ -107,7 +119,7 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
-      // 12 s timeout — resolves null on hang so button becomes tappable.
+      await awaitRcReady(); // ensure configure() has finished first
       const result = await withTimeout(Purchases.getOfferings(), 12_000);
       if (!result) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
