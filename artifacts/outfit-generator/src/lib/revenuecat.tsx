@@ -26,10 +26,14 @@ export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "My Digital Holidays Pro";
 
 const RC_TEST_KEY = import.meta.env.VITE_REVENUECAT_TEST_KEY as string | undefined;
 const RC_IOS_KEY  = import.meta.env.VITE_REVENUECAT_IOS_KEY  as string | undefined;
+// RC public iOS keys are designed to be embedded in the app bundle.
+// This is the fallback for when the build-time env var is not injected.
+const RC_IOS_KEY_FALLBACK = "appl_QMxyPWfJlvrCqHrbLhPMTgthvKc";
 
 function getApiKey(): string {
   const isNative = Capacitor.isNativePlatform();
   if (isNative && RC_IOS_KEY) return RC_IOS_KEY;
+  if (isNative) return RC_IOS_KEY_FALLBACK;
   if (RC_TEST_KEY) return RC_TEST_KEY;
   throw new Error("RevenueCat API key not configured");
 }
