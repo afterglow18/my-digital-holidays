@@ -40,10 +40,12 @@ function getApiKey(): string {
 
 // ── Timeout helper ────────────────────────────────────────────────────────────
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)
+    ),
   ]);
 }
 
@@ -168,7 +170,7 @@ function useSubscriptionContext() {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
       const result = await withTimeout(Purchases.getCustomerInfo(), 5000);
-      return result?.customerInfo ?? null;
+      return result.customerInfo ?? null;
     },
     staleTime: 0,
     retry: false,
@@ -181,16 +183,16 @@ function useSubscriptionContext() {
       console.log("[RC] getOfferings() — starting (12 s timeout)");
       const Purchases = await getPurchases();
       if (!Purchases) { console.log("[RC] getOfferings() — no Purchases, returning null"); return null; }
-      let result: Awaited<ReturnType<typeof Purchases.getOfferings>> | null;
+      let result: Awaited<ReturnType<typeof Purchases.getOfferings>>;
       try {
         // 12 s — enough for RC + StoreKit on any network; short enough to
         // surface a fast error to the user instead of a 30 s blank wait.
+        // Throws on timeout so React Query's retry:1 can fire a second attempt.
         result = await withTimeout(Purchases.getOfferings(), 12000);
       } catch (e) {
         console.error("[RC] getOfferings() — threw:", e);
-        return null;
+        throw e; // rethrow so React Query retries (retry: 1)
       }
-      if (!result) { console.warn("[RC] getOfferings() — timed out or returned null"); return null; }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = (result as any).offerings ?? result ?? null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
