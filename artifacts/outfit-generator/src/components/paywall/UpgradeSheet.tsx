@@ -129,7 +129,7 @@ function openUrl(url: string) {
 }
 
 export function UpgradeSheet({ reason, onClose }: Props) {
-  const { offerings, purchase, restore, isRestoring, isLoading } = useSubscription();
+  const { offerings, purchase, restore, isRestoring, isLoading, isOfferingsReady } = useSubscription();
   const [selected, setSelected] = useState<TierId>("lifetime");
   const [status,   setStatus]   = useState<"idle" | "pending">("idle");
   const [error,    setError]    = useState<string | null>(null);
@@ -164,7 +164,11 @@ export function UpgradeSheet({ reason, onClose }: Props) {
     const pkg = getRcPackage(offerings, TIER_DEFAULTS[selected].pkgId);
     if (!pkg) {
       setStatus("idle");
-      setError("Subscription products couldn't be loaded. Check your connection and try again.");
+      setError(
+        isOfferingsReady
+          ? "Subscription products couldn't be loaded. Check your connection and try again."
+          : "Plans are still loading — please wait a few seconds and try again."
+      );
       return;
     }
     try {
