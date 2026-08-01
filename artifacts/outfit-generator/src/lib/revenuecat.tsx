@@ -85,7 +85,9 @@ export function initializeRevenueCat(): Promise<void> {
   if (_rcInitPromise) return _rcInitPromise;
   _rcInitPromise = (async () => {
     _rcDiagIsNative = Capacitor.isNativePlatform();
-    console.log("[RC] initializeRevenueCat() start — isNative:", _rcDiagIsNative);
+    const pluginAvailable = Capacitor.isPluginAvailable('Purchases');
+    _rcDiagPluginAvailable = pluginAvailable;
+    console.log("[RC] initializeRevenueCat() start — isNative:", _rcDiagIsNative, "pluginAvailable:", pluginAvailable);
     const Purchases = await getPurchases();
     if (!Purchases) {
       console.log("[RC] getPurchases() returned null — not native, skipping");
@@ -129,6 +131,7 @@ export type RcDiagStatus = "init" | "ok" | "err" | "skipped";
 let _rcDiagStatus: RcDiagStatus = "init";
 let _rcDiagError = "";
 let _rcDiagIsNative = false;
+let _rcDiagPluginAvailable = false;
 const _rcDiagListeners: Array<() => void> = [];
 
 function setDiag(status: RcDiagStatus, err = "") {
@@ -137,10 +140,10 @@ function setDiag(status: RcDiagStatus, err = "") {
   _rcDiagListeners.splice(0).forEach((cb) => cb());
 }
 
-export function useRcDiag(): { status: RcDiagStatus; err: string; isNative: boolean } {
-  const [s, setS] = React.useState({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative });
+export function useRcDiag(): { status: RcDiagStatus; err: string; isNative: boolean; pluginAvailable: boolean } {
+  const [s, setS] = React.useState({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative, pluginAvailable: _rcDiagPluginAvailable });
   React.useEffect(() => {
-    const update = () => setS({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative });
+    const update = () => setS({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative, pluginAvailable: _rcDiagPluginAvailable });
     _rcDiagListeners.push(update);
     return () => { const i = _rcDiagListeners.indexOf(update); if (i !== -1) _rcDiagListeners.splice(i, 1); };
   }, []);

@@ -362,7 +362,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
         {/* RC diagnostic — temporary, remove before App Store submission */}
         <p className="text-center text-[9px] text-black/25 leading-relaxed font-mono">
-          RC:{diag.status} native:{String(diag.isNative)} offerings:{offerings ? "yes" : "no"}
+          RC:{diag.status} native:{String(diag.isNative)} plugin:{String(diag.pluginAvailable)} offerings:{offerings ? "yes" : "no"}
           {diag.err ? ` err:${diag.err.slice(0, 40)}` : ""}
         </p>
 
