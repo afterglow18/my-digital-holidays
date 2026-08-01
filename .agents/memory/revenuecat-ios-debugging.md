@@ -5,7 +5,21 @@ description: Root causes and fixes for RC purchases silently failing in a Capaci
 
 # RevenueCat iOS Purchases — Debugging Lessons
 
-## ROOT CAUSE: Wrong Xcode workspace in Codemagic (CocoaPods not linked)
+## ROOT CAUSE: initializeRevenueCat() never called at startup
+
+**Why:** `main.tsx` never imported or called `initializeRevenueCat()`. The hook (`useRevenueCat`) calls it as a fallback when a component mounts, but by that point the SDK is already needed for purchase flows. RC's native bridge was never touched at launch → RC dashboard showed "No SDK version data yet" forever.
+
+**Fix:** Add to `main.tsx`, before `createRoot`:
+```ts
+import { initializeRevenueCat } from './lib/revenuecat';
+initializeRevenueCat().catch(console.warn);
+```
+
+**How to apply:** For any Capacitor app using RevenueCat, `Purchases.configure()` must be called at app startup in `main.tsx` (or equivalent entry point), not lazily inside a React component or hook.
+
+---
+
+## Wrong Xcode workspace in Codemagic (CocoaPods not linked)
 
 **Why:** Codemagic was building with `App.xcodeproj/project.xcworkspace` (the raw Xcode project workspace). When `cap add ios` runs, CocoaPods generates `App.xcworkspace` that wraps both the project AND all native Capacitor plugin frameworks (RevenueCat, Camera, etc.). Building from the wrong workspace means native plugin frameworks are never compiled in. JS `Purchases.configure()` hits the bridge and gets nothing back — silently. RC shows "No SDK version data yet" because the native code was never in the binary.
 
