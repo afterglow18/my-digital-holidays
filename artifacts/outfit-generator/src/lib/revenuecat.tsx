@@ -176,16 +176,16 @@ function useRcReady(): boolean {
   useEffect(() => {
     if (_rcSettled) { setRcReady(true); return; }
     let cancelled = false;
-    initializeRevenueCat()
-      .then(() => {
-        if (!cancelled) setRcReady(true);
-      })
-      .catch((err) => {
-        // Unblock queries even on error — otherwise UI hangs forever.
-        console.warn("[RevenueCat] Init failed — unblocking queries:", err);
-        if (!cancelled) setRcReady(true);
-      });
-    return () => { cancelled = true; };
+    const unblock = () => { if (!cancelled) setRcReady(true); };
+    initializeRevenueCat().then(unblock).catch((err) => {
+      console.warn("[RevenueCat] Init failed — unblocking queries:", err);
+      unblock();
+    });
+    // 30 s hard timeout — if configure() hangs indefinitely (e.g. native bridge
+    // not responding), unblock queries so the UI can show an error instead of
+    // staying blank forever.
+    const t = setTimeout(unblock, 30_000);
+    return () => { cancelled = true; clearTimeout(t); };
   }, []);
   return rcReady;
 }
@@ -336,7 +336,10 @@ function useSubscriptionContext() {
     offerings:        offeringsQuery.data ?? null,
     isSubscribed,
     isLoading:        customerInfoQuery.isLoading || offeringsQuery.isLoading,
-    isOfferingsReady: !offeringsQuery.isLoading && !offeringsQuery.isFetching,
+    // rcReady guard prevents disabled queries from appearing "ready" (React Query
+    // reports isLoading=false for disabled queries, which would trigger a
+    // premature "couldn't load" error before configure() has even finished).
+    isOfferingsReady: rcReady && !offeringsQuery.isLoading && !offeringsQuery.isFetching,
     purchase:         purchaseMutation.mutateAsync,
     restore:       restoreMutation.mutateAsync,
     isPurchasing:  purchaseMutation.isPending,
