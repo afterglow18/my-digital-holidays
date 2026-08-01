@@ -58,13 +58,17 @@ workflows:
           # pnpm stores packages as symlinks. Xcode's SPM resolver cannot follow
           # symlinks for local package references, so the RC plugin's Swift code
           # is never compiled into the binary and bridge calls hang forever.
-          # Replace the symlink with the real directory content before cap add ios.
           cd artifacts/outfit-generator
-          RC_REAL=$(python3 -c "import os; print(os.path.realpath('node_modules/@revenuecat/purchases-capacitor'))")
-          echo "Dereferencing RC plugin: $RC_REAL"
-          rm -rf node_modules/@revenuecat/purchases-capacitor
-          cp -rL "$RC_REAL" node_modules/@revenuecat/purchases-capacitor
-          echo "Done — $(ls node_modules/@revenuecat/purchases-capacitor)"
+          RC_PATH="node_modules/@revenuecat/purchases-capacitor"
+          if [ -L "$RC_PATH" ]; then
+            echo "Dereferencing pnpm symlink: $RC_PATH"
+            cp -rL "$RC_PATH" "${RC_PATH}-real"
+            rm "$RC_PATH"
+            mv "${RC_PATH}-real" "$RC_PATH"
+            echo "Done — $(ls $RC_PATH)"
+          else
+            echo "Not a symlink, skipping: $RC_PATH"
+          fi
 
       - name: Capacitor add iOS and sync
         script: |
