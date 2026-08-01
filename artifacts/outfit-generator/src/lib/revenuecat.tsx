@@ -98,35 +98,37 @@ export function initializeRevenueCat(): Promise<void> {
     let apiKey: string;
     try {
       apiKey = getApiKey();
-      console.log("[RC] Using API key:", apiKey.slice(0, 12) + "…");
+      // RC public keys are designed to live in the app bundle — safe to log in full
+      console.log("[RC] API key:", apiKey);
     } catch (e) {
       console.error("[RC] getApiKey() threw — no key available:", e);
       setDiag("err", `getApiKey: ${e}`);
       throw e;
     }
 
-    try {
-      const { LOG_LEVEL } = await import("@revenuecat/purchases-capacitor");
-      await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-    } catch { /* non-fatal */ }
+    // setLogLevel — fire and forget. Do NOT await: if the bridge response is slow
+    // or never arrives, awaiting would block configure() from ever being called.
+    import("@revenuecat/purchases-capacitor")
+      .then(({ LOG_LEVEL }) =>
+        Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG })
+          .then(() => console.log("[RC] setLogLevel DEBUG ✓"))
+          .catch((e: unknown) => console.warn("[RC] setLogLevel failed:", e))
+      )
+      .catch(() => {});
 
-    try {
-      // RC Capacitor v13 configure() returns CustomerInfo from an initial network
-      // fetch — awaiting it blocks until RC's servers respond. Use a 5 s timeout:
-      // if it times out the SDK is still configured (native init is synchronous),
-      // only the first CustomerInfo fetch is slow. Treat timeout as success.
-      await withTimeout(Purchases.configure({ apiKey }), 5000);
-      console.log("[RC] configure() resolved ✓");
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes("timed out")) {
-        console.warn("[RC] configure() CustomerInfo fetch slow — SDK ready, proceeding");
-      } else {
-        console.error("[RC] configure() threw:", e);
-        setDiag("err", `configure: ${msg.slice(0, 60)}`);
-        throw e;
-      }
-    }
+    // configure() — fire and forget. configure() on the Swift side is synchronous:
+    // the SDK is fully initialized the moment the bridge message arrives. The
+    // Promise only resolves once the bridge response comes back to JS — which may
+    // lag or never arrive. Awaiting it was the cause of the RC "never used" state.
+    console.log("[RC] Sending configure() to native bridge…");
+    void Purchases.configure({ apiKey })
+      .then(() => console.log("[RC] configure() bridge response received ✓"))
+      .catch((e: unknown) => console.error("[RC] configure() error:", e));
+
+    // Yield one microtask tick so the bridge message is dispatched before we
+    // signal ready and queries start.
+    await Promise.resolve();
+    console.log("[RC] configure() dispatched — marking ready");
     setDiag("ok");
   })().finally(() => {
     console.log("[RC] initializeRevenueCat() settled — notifying");
