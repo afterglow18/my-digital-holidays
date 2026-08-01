@@ -25,10 +25,3 @@ export const TIER_CAPS: Record<Tier, TierCapabilities> = {
   free:   { maxItems: FREE_ITEM_LIMIT,  maxOutfits: FREE_OUTFIT_LIMIT, mannequin: false },
   unlock: { maxItems: null,             maxOutfits: null,              mannequin: true  },
 };
-
-/** Products available for purchase. */
-export type PurchaseProduct = "unlock";
-
-export const PRODUCT_PRICES: Record<PurchaseProduct, string> = {
-  unlock: "$9.99",
-};

@@ -19,7 +19,6 @@ import { Tier, TIER_CAPS, TierCapabilities } from "@/lib/entitlements";
 import { useSubscription } from "@/lib/revenuecat";
 
 export type PurchaseResult = "success" | "cancelled" | "unavailable";
-export type PurchaseProduct = "unlock";
 
 // setGlobalTier is no longer needed (RC manages state) but keep the export so
 // App.tsx doesn't need special-casing if any old import remains.
@@ -29,7 +28,6 @@ export function useEntitlements() {
   const { isSubscribed, offerings, purchase: rcPurchase, isPurchasing } =
     useSubscription();
 
-  // Both "unlock" and "premium" products now map to the RC "unlock" tier.
   const tier: Tier = isSubscribed ? "unlock" : "free";
   const caps: TierCapabilities = TIER_CAPS[tier];
 
