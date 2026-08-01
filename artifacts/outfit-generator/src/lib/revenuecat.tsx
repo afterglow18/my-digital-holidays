@@ -24,18 +24,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "My Digital Holidays Pro";
 
-const RC_TEST_KEY = import.meta.env.VITE_REVENUECAT_TEST_KEY as string | undefined;
-const RC_IOS_KEY  = import.meta.env.VITE_REVENUECAT_IOS_KEY  as string | undefined;
-// RC public iOS keys are designed to be embedded in the app bundle.
-// This is the fallback for when the build-time env var is not injected.
-const RC_IOS_KEY_FALLBACK = "appl_QMxyPWfJlvrCqHrbLhPMTgthvKc";
+// RC public iOS keys are designed to be embedded in the app bundle — not a secret.
+// Hardcoded directly to avoid any risk of a wrong env var from another RC app
+// (e.g. My Digital Closet) overriding this and routing configure() to the wrong account.
+const RC_IOS_KEY = "appl_QMxyPWfJlvrCqHrbLhPMTgthvKc";
 
 function getApiKey(): string {
-  const isNative = Capacitor.isNativePlatform();
-  if (isNative && RC_IOS_KEY) return RC_IOS_KEY;
-  if (isNative) return RC_IOS_KEY_FALLBACK;
-  if (RC_TEST_KEY) return RC_TEST_KEY;
-  throw new Error("RevenueCat API key not configured");
+  if (Capacitor.isNativePlatform()) return RC_IOS_KEY;
+  // Browser/web — no purchases, getApiKey should never be called here
+  throw new Error("RevenueCat API key not applicable outside native platform");
 }
 
 // ── Timeout helper ────────────────────────────────────────────────────────────
