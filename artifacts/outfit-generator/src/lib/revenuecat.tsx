@@ -84,10 +84,12 @@ let _rcInitPromise: Promise<void> | null = null;
 export function initializeRevenueCat(): Promise<void> {
   if (_rcInitPromise) return _rcInitPromise;
   _rcInitPromise = (async () => {
-    console.log("[RC] initializeRevenueCat() start — isNative:", Capacitor.isNativePlatform());
+    _rcDiagIsNative = Capacitor.isNativePlatform();
+    console.log("[RC] initializeRevenueCat() start — isNative:", _rcDiagIsNative);
     const Purchases = await getPurchases();
     if (!Purchases) {
       console.log("[RC] getPurchases() returned null — not native, skipping");
+      setDiag("skipped");
       return;
     }
 
@@ -97,6 +99,7 @@ export function initializeRevenueCat(): Promise<void> {
       console.log("[RC] Using API key:", apiKey.slice(0, 12) + "…");
     } catch (e) {
       console.error("[RC] getApiKey() threw — no key available:", e);
+      setDiag("err", `getApiKey: ${e}`);
       throw e;
     }
 
@@ -108,8 +111,10 @@ export function initializeRevenueCat(): Promise<void> {
     try {
       await Purchases.configure({ apiKey });
       console.log("[RC] configure() succeeded ✓");
+      setDiag("ok");
     } catch (e) {
       console.error("[RC] configure() threw:", e);
+      setDiag("err", `configure: ${e}`);
       throw e;
     }
   })().finally(() => {
@@ -117,6 +122,29 @@ export function initializeRevenueCat(): Promise<void> {
     notifyRcSettled();
   });
   return _rcInitPromise;
+}
+
+// ── RC diagnostic state (temporary — remove before App Store submission) ──────
+export type RcDiagStatus = "init" | "ok" | "err" | "skipped";
+let _rcDiagStatus: RcDiagStatus = "init";
+let _rcDiagError = "";
+let _rcDiagIsNative = false;
+const _rcDiagListeners: Array<() => void> = [];
+
+function setDiag(status: RcDiagStatus, err = "") {
+  _rcDiagStatus = status;
+  _rcDiagError = err;
+  _rcDiagListeners.splice(0).forEach((cb) => cb());
+}
+
+export function useRcDiag(): { status: RcDiagStatus; err: string; isNative: boolean } {
+  const [s, setS] = React.useState({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative });
+  React.useEffect(() => {
+    const update = () => setS({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative });
+    _rcDiagListeners.push(update);
+    return () => { const i = _rcDiagListeners.indexOf(update); if (i !== -1) _rcDiagListeners.splice(i, 1); };
+  }, []);
+  return s;
 }
 
 // ── RC readiness signal ───────────────────────────────────────────────────────

@@ -12,7 +12,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
-import { useSubscription } from "@/lib/revenuecat";
+import { useSubscription, useRcDiag } from "@/lib/revenuecat";
 
 export type UpgradeReason = "items" | "outfits" | "mannequin";
 type TierId = "monthly" | "yearly" | "lifetime";
@@ -130,6 +130,7 @@ function openUrl(url: string) {
 
 export function UpgradeSheet({ reason, onClose }: Props) {
   const { offerings, purchase, restore, isRestoring, isLoading, isOfferingsReady } = useSubscription();
+  const diag = useRcDiag();
   const [selected, setSelected] = useState<TierId>("lifetime");
   const [status,   setStatus]   = useState<"idle" | "pending">("idle");
   const [error,    setError]    = useState<string | null>(null);
@@ -358,6 +359,12 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         >
           {isRestoring ? "Restoring…" : "Restore Purchases"}
         </button>
+
+        {/* RC diagnostic — temporary, remove before App Store submission */}
+        <p className="text-center text-[9px] text-black/25 leading-relaxed font-mono">
+          RC:{diag.status} native:{String(diag.isNative)} offerings:{offerings ? "yes" : "no"}
+          {diag.err ? ` err:${diag.err.slice(0, 40)}` : ""}
+        </p>
 
         {/* Legal links */}
         <p className="text-center text-[10px] text-black/30 leading-relaxed">
