@@ -18,6 +18,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -31,7 +32,6 @@ const RC_IOS_KEY = "appl_QMxyPWfJlvrCqHrbLhPMTgthvKc";
 
 function getApiKey(): string {
   if (Capacitor.isNativePlatform()) return RC_IOS_KEY;
-  // Browser/web — no purchases, getApiKey should never be called here
   throw new Error("RevenueCat API key not applicable outside native platform");
 }
 
@@ -52,27 +52,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
       if (done) { clearInterval(iv); return; }
       if (Date.now() - start >= ms) {
         clearInterval(iv);
-        reject(new Error(`RC getOfferings timed out after ${ms}ms`));
+        reject(new Error(`RC operation timed out after ${ms}ms`));
       }
     }, 1000);
   });
-}
-
-// ── Lazy-import Purchases so it doesn't crash in the browser ─────────────────
-
-type PurchasesType = typeof import("@revenuecat/purchases-capacitor").Purchases;
-let _Purchases: PurchasesType | null = null;
-
-async function getPurchases(): Promise<PurchasesType | null> {
-  if (!Capacitor.isNativePlatform()) return null;
-  if (_Purchases) return _Purchases;
-  try {
-    const mod = await import("@revenuecat/purchases-capacitor");
-    _Purchases = mod.Purchases;
-    return _Purchases;
-  } catch {
-    return null;
-  }
 }
 
 // ── Initialization ────────────────────────────────────────────────────────────
@@ -85,12 +68,12 @@ export function initializeRevenueCat(): Promise<void> {
   if (_rcInitPromise) return _rcInitPromise;
   _rcInitPromise = (async () => {
     _rcDiagIsNative = Capacitor.isNativePlatform();
-    const pluginAvailable = Capacitor.isPluginAvailable('Purchases');
+    const pluginAvailable = Capacitor.isPluginAvailable("Purchases");
     _rcDiagPluginAvailable = pluginAvailable;
     console.log("[RC] initializeRevenueCat() start — isNative:", _rcDiagIsNative, "pluginAvailable:", pluginAvailable);
-    const Purchases = await getPurchases();
-    if (!Purchases) {
-      console.log("[RC] getPurchases() returned null — not native, skipping");
+
+    if (!Capacitor.isNativePlatform()) {
+      console.log("[RC] Not native — skipping configure()");
       setDiag("skipped");
       return;
     }
@@ -101,32 +84,29 @@ export function initializeRevenueCat(): Promise<void> {
       // RC public keys are designed to live in the app bundle — safe to log in full
       console.log("[RC] API key:", apiKey);
     } catch (e) {
-      console.error("[RC] getApiKey() threw — no key available:", e);
+      console.error("[RC] getApiKey() threw:", e);
       setDiag("err", `getApiKey: ${e}`);
       throw e;
     }
 
-    // setLogLevel — fire and forget. Do NOT await: if the bridge response is slow
-    // or never arrives, awaiting would block configure() from ever being called.
-    import("@revenuecat/purchases-capacitor")
-      .then(({ LOG_LEVEL }) =>
-        Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG })
-          .then(() => console.log("[RC] setLogLevel DEBUG ✓"))
-          .catch((e: unknown) => console.warn("[RC] setLogLevel failed:", e))
-      )
-      .catch(() => {});
+    // setLogLevel — fire and forget. Do NOT await: the Capacitor bridge response
+    // (Swift → JS callback) may never arrive on Capacitor 8 + SPM builds.
+    void Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG })
+      .then(() => console.log("[RC] setLogLevel DEBUG ✓"))
+      .catch((e: unknown) => console.warn("[RC] setLogLevel failed:", e));
 
-    // configure() — fire and forget. configure() on the Swift side is synchronous:
-    // the SDK is fully initialized the moment the bridge message arrives. The
-    // Promise only resolves once the bridge response comes back to JS — which may
-    // lag or never arrive. Awaiting it was the cause of the RC "never used" state.
+    // configure() — fire and forget. Swift Purchases.configure() is synchronous:
+    // the SDK is fully initialized the moment the bridge message arrives.
+    // The Promise only resolves when the bridge response comes back to JS —
+    // which may never happen on Capacitor 8 + SPM. Awaiting it blocked configure()
+    // from ever reaching native, causing RC dashboard to show "SDK key never used".
     console.log("[RC] Sending configure() to native bridge…");
     void Purchases.configure({ apiKey })
       .then(() => console.log("[RC] configure() bridge response received ✓"))
       .catch((e: unknown) => console.error("[RC] configure() error:", e));
 
-    // Yield one microtask tick so the bridge message is dispatched before we
-    // signal ready and queries start.
+    // One microtask tick to ensure the bridge message is dispatched before
+    // queries start running.
     await Promise.resolve();
     console.log("[RC] configure() dispatched — marking ready");
     setDiag("ok");
@@ -177,13 +157,8 @@ function notifyRcSettled() {
 /** React hook — returns true once RC has configured (or failed).
  *
  * Starts false; set to true when initializeRevenueCat() resolves OR rejects.
- * This matches the working My Digital Closet pattern: queries never fire
- * until configure() has actually settled, and any error still unblocks them
- * so the UI doesn't hang forever.
- *
- * initializeRevenueCat() is also called in main.tsx before React mounts
- * (for early start). The _rcInitPromise guard means configure() only ever
- * runs once — this useEffect just subscribes to the same promise.
+ * This prevents queries from firing before configure() has been dispatched,
+ * while any error still unblocks them so the UI doesn't hang forever.
  */
 function useRcReady(): boolean {
   const [rcReady, setRcReady] = useState(_rcSettled);
@@ -195,9 +170,7 @@ function useRcReady(): boolean {
       console.warn("[RevenueCat] Init failed — unblocking queries:", err);
       unblock();
     });
-    // 30 s hard timeout — if configure() hangs indefinitely (e.g. native bridge
-    // not responding), unblock queries so the UI can show an error instead of
-    // staying blank forever.
+    // 30 s hard timeout — if something hangs, unblock so UI can show an error.
     const t = setTimeout(unblock, 30_000);
     return () => { cancelled = true; clearTimeout(t); };
   }, []);
@@ -212,16 +185,13 @@ const CUSTOMER_INFO_KEY = ["revenuecat", "customer-info"] as const;
 
 function useSubscriptionContext() {
   const qc = useQueryClient();
-  // Gate both queries on RC being configured (or 8 s timeout elapsed).
-  // While rcReady is false, isLoading stays false — button shows fallback prices.
   const rcReady = useRcReady();
 
   const customerInfoQuery = useQuery({
     queryKey: CUSTOMER_INFO_KEY,
     enabled: rcReady,
     queryFn: async () => {
-      const Purchases = await getPurchases();
-      if (!Purchases) return null;
+      if (!Capacitor.isNativePlatform()) return null;
       const result = await withTimeout(Purchases.getCustomerInfo(), 5000);
       return result.customerInfo ?? null;
     },
@@ -234,13 +204,14 @@ function useSubscriptionContext() {
     enabled: rcReady,
     queryFn: async () => {
       console.log("[RC] getOfferings() — starting (12 s timeout)");
-      const Purchases = await getPurchases();
-      if (!Purchases) { console.log("[RC] getOfferings() — no Purchases, returning null"); return null; }
+      if (!Capacitor.isNativePlatform()) {
+        console.log("[RC] getOfferings() — not native, returning null");
+        return null;
+      }
       let result: Awaited<ReturnType<typeof Purchases.getOfferings>>;
       try {
         // 12 s — enough for RC + StoreKit on any network; short enough to
         // surface a fast error to the user instead of a 30 s blank wait.
-        // Throws on timeout so React Query's retry:1 can fire a second attempt.
         result = await withTimeout(Purchases.getOfferings(), 12000);
       } catch (e) {
         console.error("[RC] getOfferings() — threw:", e);
@@ -263,7 +234,6 @@ function useSubscriptionContext() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    // PluginListenerHandle has remove(): Promise<void>
     let appListenerHandle: Awaited<ReturnType<typeof import("@capacitor/app").App.addListener>> | null = null;
     let rcCallbackId: string | null = null;
 
@@ -284,15 +254,12 @@ function useSubscriptionContext() {
       // 2. RC server-push: fires when RC detects a refund, expiry, or any
       //    server-side entitlement change — revokes access in real-time.
       try {
-        const Purchases = await getPurchases();
-        if (Purchases) {
-          rcCallbackId = await Purchases.addCustomerInfoUpdateListener(
-            (customerInfo) => {
-              console.log("[RevenueCat] CustomerInfo pushed from server — updating cache");
-              qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
-            }
-          );
-        }
+        rcCallbackId = await Purchases.addCustomerInfoUpdateListener(
+          (customerInfo) => {
+            console.log("[RevenueCat] CustomerInfo pushed from server — updating cache");
+            qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
+          }
+        );
       } catch (err) {
         console.warn("[RevenueCat] Could not add CustomerInfo listener:", err);
       }
@@ -301,9 +268,8 @@ function useSubscriptionContext() {
     return () => {
       appListenerHandle?.remove();
       if (rcCallbackId !== null) {
-        getPurchases().then((Purchases) => {
-          Purchases?.removeCustomerInfoUpdateListener({ listenerToRemove: rcCallbackId! });
-        }).catch(() => {/* non-fatal */});
+        Purchases.removeCustomerInfoUpdateListener({ listenerToRemove: rcCallbackId })
+          .catch(() => {/* non-fatal */});
       }
     };
   }, [qc]);
@@ -311,14 +277,11 @@ function useSubscriptionContext() {
   // ── Purchase ───────────────────────────────────────────────────────────────
   const purchaseMutation = useMutation({
     mutationFn: async (pkg: unknown) => {
-      const Purchases = await getPurchases();
-      if (!Purchases) throw new Error("Purchases not available in browser");
+      if (!Capacitor.isNativePlatform()) throw new Error("Purchases not available in browser");
       const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg as never });
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
-      // Seed the cache immediately with the fresh CustomerInfo RC just returned,
-      // then invalidate to schedule a background re-fetch for confirmation.
       qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
       qc.invalidateQueries({ queryKey: ["revenuecat"] });
     },
@@ -327,13 +290,11 @@ function useSubscriptionContext() {
   // ── Restore ────────────────────────────────────────────────────────────────
   const restoreMutation = useMutation({
     mutationFn: async () => {
-      const Purchases = await getPurchases();
-      if (!Purchases) throw new Error("Purchases not available in browser");
+      if (!Capacitor.isNativePlatform()) throw new Error("Purchases not available in browser");
       const { customerInfo } = await Purchases.restorePurchases();
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
-      // Same pattern: seed immediately, then confirm in background.
       qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
       qc.invalidateQueries({ queryKey: ["revenuecat"] });
     },
@@ -355,10 +316,10 @@ function useSubscriptionContext() {
     // premature "couldn't load" error before configure() has even finished).
     isOfferingsReady: rcReady && !offeringsQuery.isLoading && !offeringsQuery.isFetching,
     purchase:         purchaseMutation.mutateAsync,
-    restore:       restoreMutation.mutateAsync,
-    isPurchasing:  purchaseMutation.isPending,
-    isRestoring:   restoreMutation.isPending,
-    purchaseError: purchaseMutation.error as Error | null,
+    restore:          restoreMutation.mutateAsync,
+    isPurchasing:     purchaseMutation.isPending,
+    isRestoring:      restoreMutation.isPending,
+    purchaseError:    purchaseMutation.error as Error | null,
   };
 }
 
