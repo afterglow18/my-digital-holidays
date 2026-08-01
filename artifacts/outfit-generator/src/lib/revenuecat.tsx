@@ -160,32 +160,34 @@ function notifyRcSettled() {
   _rcSettledCallbacks.splice(0).forEach((cb) => cb());
 }
 
-/** React hook — returns true once RC has configured (or immediately on native).
+/** React hook — returns true once RC has configured (or failed).
  *
- * On native we start queries immediately and let RC's native SDK handle
- * internal sequencing — this avoids issues where the JS-side settle signal
- * never fires (e.g. configure() hangs before .finally() runs).
+ * Starts false; set to true when initializeRevenueCat() resolves OR rejects.
+ * This matches the working My Digital Closet pattern: queries never fire
+ * until configure() has actually settled, and any error still unblocks them
+ * so the UI doesn't hang forever.
+ *
+ * initializeRevenueCat() is also called in main.tsx before React mounts
+ * (for early start). The _rcInitPromise guard means configure() only ever
+ * runs once — this useEffect just subscribes to the same promise.
  */
 function useRcReady(): boolean {
-  // On native: always ready immediately — RC's native layer queues calls
-  // made before configure() finishes and processes them once it does.
-  // In browser: wait for settle signal (or 3 s fallback) so we don't
-  // attempt bridge calls in a non-native context.
-  const isNative = Capacitor.isNativePlatform();
-  const [ready, setReady] = useState(isNative || _rcSettled);
+  const [rcReady, setRcReady] = useState(_rcSettled);
   useEffect(() => {
-    if (isNative || _rcSettled) { setReady(true); return; }
-    const onReady = () => setReady(true);
-    _rcSettledCallbacks.push(onReady);
-    // 3 s fallback for browser/web context
-    const t = setTimeout(() => { notifyRcSettled(); }, 3_000);
-    return () => {
-      clearTimeout(t);
-      const i = _rcSettledCallbacks.indexOf(onReady);
-      if (i !== -1) _rcSettledCallbacks.splice(i, 1);
-    };
-  }, [isNative]);
-  return ready;
+    if (_rcSettled) { setRcReady(true); return; }
+    let cancelled = false;
+    initializeRevenueCat()
+      .then(() => {
+        if (!cancelled) setRcReady(true);
+      })
+      .catch((err) => {
+        // Unblock queries even on error — otherwise UI hangs forever.
+        console.warn("[RevenueCat] Init failed — unblocking queries:", err);
+        if (!cancelled) setRcReady(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
+  return rcReady;
 }
 
 // ── Query key ─────────────────────────────────────────────────────────────────
