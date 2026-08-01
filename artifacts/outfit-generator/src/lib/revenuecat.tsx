@@ -111,14 +111,23 @@ export function initializeRevenueCat(): Promise<void> {
     } catch { /* non-fatal */ }
 
     try {
-      await Purchases.configure({ apiKey });
-      console.log("[RC] configure() succeeded ✓");
-      setDiag("ok");
+      // RC Capacitor v13 configure() returns CustomerInfo from an initial network
+      // fetch — awaiting it blocks until RC's servers respond. Use a 5 s timeout:
+      // if it times out the SDK is still configured (native init is synchronous),
+      // only the first CustomerInfo fetch is slow. Treat timeout as success.
+      await withTimeout(Purchases.configure({ apiKey }), 5000);
+      console.log("[RC] configure() resolved ✓");
     } catch (e) {
-      console.error("[RC] configure() threw:", e);
-      setDiag("err", `configure: ${e}`);
-      throw e;
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("timed out")) {
+        console.warn("[RC] configure() CustomerInfo fetch slow — SDK ready, proceeding");
+      } else {
+        console.error("[RC] configure() threw:", e);
+        setDiag("err", `configure: ${msg.slice(0, 60)}`);
+        throw e;
+      }
     }
+    setDiag("ok");
   })().finally(() => {
     console.log("[RC] initializeRevenueCat() settled — notifying");
     notifyRcSettled();
