@@ -405,7 +405,7 @@ export default function WardrobePage() {
             aria-label="View saved looks"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.895),
+              top:    pY(ir, 0.872),
               left:   pX(ir, 0.115),
               width:  pW(ir, 0.170),
               height: pH(ir, 0.080),

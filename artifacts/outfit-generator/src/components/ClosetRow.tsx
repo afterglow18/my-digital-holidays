@@ -168,7 +168,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
       setTransition(true);
       setDragX(0);
       if (moved && slotW > 0) {
-        const THRESH = slotW * 0.20;
+        const THRESH = slotW * 0.11;
         if (dx < -THRESH) {
           setCentredIdx(i => Math.min(items.length - 1, i + 1));
         } else if (dx > THRESH) {
