@@ -113,6 +113,10 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
   // Generation counter — prevents a slow first photo from clobbering a fast second.
   const bgGenRef = useRef(0);
+  // Batch queue — remaining webPaths to process after the current photo.
+  const photoQueueRef  = useRef<string[]>([]);
+  // How many items have been saved so far (used for auto-naming, avoids stale closure).
+  const savedCountRef  = useRef(0);
 
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
@@ -122,6 +126,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   // Save disabled with no explanation on next open.
   const handleClose = useCallback(() => {
     bgGenRef.current += 1;
+    photoQueueRef.current = [];
+    savedCountRef.current = 0;
     setBgProcessing(false);
     setPhase("pick");
     setErrorMsg(null);
@@ -191,7 +197,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   }, []);
 
   // ── saveWithVersion ────────────────────────────────────────────────────────
-  // Saves the chosen version directly — called by tapping a card in preview.
+  // Saves the chosen version. In batch mode, advances to the next queued photo
+  // instead of closing after save.
   const saveWithVersion = useCallback(async (version: "original" | "cleaned") => {
     const blob = version === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
     if (!blob) return;
@@ -199,7 +206,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     try {
       const dataUrl  = await blobToDataUrl(blob);
       const label    = CATEGORY_LABELS[category];
-      const autoName = existingCount === 0 ? label : `${label} ${existingCount + 1}`;
+      const n        = existingCount + savedCountRef.current;
+      const autoName = n === 0 ? label : `${label} ${n + 1}`;
       await new Promise<void>((resolve, reject) => {
         createItem.mutate(
           { data: { name: autoName, category, imageObjectPath: dataUrl } },
@@ -214,12 +222,27 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
           },
         );
       });
-      handleClose();
+
+      savedCountRef.current += 1;
+      const nextWebPath = photoQueueRef.current.shift();
+      if (nextWebPath) {
+        // Advance to next photo in batch — go back through encode → preview flow
+        setBatchDone(savedCountRef.current);
+        try {
+          const nextBlob = await fetch(nextWebPath).then(r => r.blob());
+          handleFile(nextBlob);
+        } catch {
+          // Skip unreadable photo and close
+          handleClose();
+        }
+      } else {
+        handleClose();
+      }
     } catch (err) {
       setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
       setPhase("preview");
     }
-  }, [cleanedBlob, originalBlob, category, existingCount, createItem, queryClient, onCreated, handleClose]);
+  }, [cleanedBlob, originalBlob, category, existingCount, createItem, queryClient, onCreated, handleClose, handleFile]);
 
   // ── Native camera / gallery via Capacitor plugin ───────────────────────────
   // Using @capacitor/camera instead of a hidden file input avoids the
@@ -253,90 +276,31 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const handleCameraCapture = useCallback(() => openPhotoPicker(true), [openPhotoPicker]);
 
   // Gallery — multi-select via Camera.pickImages().
-  // 1 photo → normal preview flow. Multiple → batch encode + auto-save.
+  // Each photo gets its own compare screen (Original vs Cleaned).
+  // Remaining photos are queued in photoQueueRef and advanced after each save.
   const handleGalleryCapture = useCallback(async () => {
     try {
       const { photos } = await Camera.pickImages({ quality: 85, limit: 0 });
       if (!photos.length) return;
 
-      // Single photo → go through the normal preview + bg-removal flow
-      if (photos.length === 1) {
-        const blob = await fetch(photos[0].webPath!).then(r => r.blob());
-        handleFile(blob);
-        return;
+      if (photos.length > 1) {
+        // Store the rest of the queue; saveWithVersion will advance through them
+        photoQueueRef.current = photos.slice(1).map(p => p.webPath!);
+        savedCountRef.current = 0;
+        setBatchTotal(photos.length);
+        setBatchDone(0);
       }
 
-      // Multiple photos — batch: encode each, try bg removal, auto-save
-      const myGen = ++bgGenRef.current;
-      setBatchTotal(photos.length);
-      setBatchDone(0);
-      setErrorMsg(null);
-      setPhase("encoding");
-
-      let saved = 0;
-      for (let i = 0; i < photos.length; i++) {
-        if (bgGenRef.current !== myGen) return; // sheet was closed mid-batch
-
-        // Fetch from device filesystem
-        let rawBlob: Blob;
-        try {
-          rawBlob = await fetch(photos[i].webPath!).then(r => r.blob());
-        } catch {
-          continue; // skip unreadable photo
-        }
-
-        // Resize to JPEG ≤ 2048px
-        let jpeg: Blob;
-        try {
-          jpeg = await encodeForUpload(rawBlob);
-        } catch {
-          continue;
-        }
-        if (bgGenRef.current !== myGen) return;
-
-        // Attempt background removal; fall back to original if it fails
-        let saveBlob = jpeg;
-        try {
-          const dataUrl   = await blobToDataUrl(jpeg);
-          const resultUrl = await removeBackground(dataUrl);
-          saveBlob = await dataUrlToBlob(resultUrl);
-        } catch {
-          // use original
-        }
-        if (bgGenRef.current !== myGen) return;
-
-        // Save
-        const base = CATEGORY_LABELS[category];
-        const autoName = existingCount + saved === 0 ? base : `${base} ${existingCount + saved + 1}`;
-        const dataUrl = await blobToDataUrl(saveBlob);
-        await new Promise<void>((resolve) => {
-          createItem.mutate(
-            { data: { name: autoName, category, imageObjectPath: dataUrl } },
-            {
-              onSuccess: (createdItem) => {
-                queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-                queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
-                if (onCreated) onCreated(createdItem);
-                resolve();
-              },
-              onError: () => resolve(), // don't abort batch on single failure
-            },
-          );
-        });
-
-        saved++;
-        setBatchDone(saved);
-      }
-
-      handleClose();
+      // Process first photo through the normal encode → preview flow
+      const blob = await fetch(photos[0].webPath!).then(r => r.blob());
+      handleFile(blob);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (!msg.toLowerCase().includes("cancel") && !msg.toLowerCase().includes("user cancelled")) {
         setErrorMsg("Could not open photo library. Please try again.");
-        setPhase("pick");
       }
     }
-  }, [handleFile, category, existingCount, createItem, queryClient, onCreated, handleClose]);
+  }, [handleFile]);
 
   if (!open) return null;
 
@@ -367,7 +331,11 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
           fontFamily: "var(--font-display, serif)", fontWeight: 800, fontSize: 18,
           letterSpacing: "0.04em", textTransform: "uppercase", color: C.brown, margin: 0,
         }}>
-          {phase === "preview" ? "Choose Version" : `Add ${label}`}
+          {phase === "preview"
+            ? batchTotal > 1
+              ? `Photo ${batchDone + 1} of ${batchTotal}`
+              : "Choose Version"
+            : `Add ${label}`}
         </h2>
         {(phase === "pick" || phase === "preview") && (
           <button
@@ -597,39 +565,38 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </button>
             </div>
 
-            {/* Save Original shortcut — only while cleaning is in progress */}
-            {bgProcessing && (
-              <button
-                onClick={() => saveWithVersion("original")}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  padding: "12px 0", borderRadius: 12, width: "100%",
-                  border: `2px solid ${C.gold}`,
-                  background: `linear-gradient(to bottom, ${C.goldLight}, ${C.gold})`,
-                  fontFamily: "var(--font-display, serif)", fontWeight: 800,
-                  fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase",
-                  color: C.btnText, cursor: "pointer",
-                }}
-              >
-                Save Original — skip cleaning
-              </button>
-            )}
-
-            {/* Retake */}
+            {/* Save Original — always visible so users can skip cleaning any time */}
             <button
-              onClick={() => setPhase("pick")}
+              onClick={() => saveWithVersion("original")}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "10px 0", borderRadius: 12, width: "100%",
+                padding: "12px 0", borderRadius: 12, width: "100%",
                 border: `1.5px solid ${C.border}`, background: C.bgCard,
                 fontFamily: "var(--font-display, serif)", fontWeight: 700,
                 fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: C.brownFaint,
                 cursor: "pointer",
               }}
             >
-              <RotateCcw size={13} />
-              Retake
+              Save Original — skip cleaning
             </button>
+
+            {/* Retake — hidden in batch mode (can't retake one of a queued set) */}
+            {batchTotal <= 1 && (
+              <button
+                onClick={() => setPhase("pick")}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "10px 0", borderRadius: 12, width: "100%",
+                  border: `1.5px solid ${C.border}`, background: C.bgCard,
+                  fontFamily: "var(--font-display, serif)", fontWeight: 700,
+                  fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: C.brownFaint,
+                  cursor: "pointer",
+                }}
+              >
+                <RotateCcw size={13} />
+                Retake
+              </button>
+            )}
           </div>
         )}
 
