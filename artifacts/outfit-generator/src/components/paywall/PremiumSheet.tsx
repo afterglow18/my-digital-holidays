@@ -39,11 +39,11 @@ export function PremiumSheet({ onClose }: Props) {
   const [error,   setError]   = useState<string | null>(null);
 
   const handlePurchase = useCallback(
-    async (product: PurchaseProduct) => {
+    async () => {
       if (pending || isLoading) return;
       setError(null);
-      setPending(product);
-      const result: PurchaseResult = await purchase(product);
+      setPending("unlock");
+      const result: PurchaseResult = await purchase();
       if (result === "success") {
         onClose();
       } else if (result === "unavailable") {
@@ -120,7 +120,7 @@ export function PremiumSheet({ onClose }: Props) {
       <div className="px-5 pb-6 pt-4 bg-white border-t-2 border-black flex flex-col gap-3 flex-shrink-0">
         {/* Primary: Pro Stylist */}
         <button
-          onClick={() => handlePurchase("premium")}
+          onClick={handlePurchase}
           disabled={!!pending || isLoading}
           className="w-full py-4 rounded-xl flex items-center justify-center gap-2
                      font-display font-bold text-lg uppercase tracking-tight border-4 border-black
@@ -128,12 +128,12 @@ export function PremiumSheet({ onClose }: Props) {
                      active:translate-x-1 active:translate-y-1 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         >
-          {isLoading ? "Loading…" : pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
+          {isLoading ? "Loading…" : pending === "unlock" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
         </button>
 
         {/* Secondary: Unlock Forever (if they just want unlimited without mannequin) */}
         <button
-          onClick={() => handlePurchase("unlock")}
+          onClick={handlePurchase}
           disabled={!!pending || isLoading}
           className="w-full py-3 rounded-xl flex items-center justify-center gap-1.5
                      font-display font-bold text-sm uppercase tracking-tight border-4 border-black

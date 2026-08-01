@@ -419,7 +419,7 @@ export default function WardrobePage() {
           {/* ── Ornament icon tap zone — opens premium upgrade sheet ── */}
           <button
             onClick={() => setUpgradeReason("items")}
-            aria-label="Upgrade to premium"
+            aria-label="Upgrade"
             style={{
               position: "absolute",
               top:    pY(ir, 0.870),

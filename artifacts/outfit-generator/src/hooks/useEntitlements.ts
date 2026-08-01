@@ -7,7 +7,7 @@
  *
  * Tier mapping:
  *   no active entitlement  → "free"  (up to 20 items, 5 outfits)
- *   "premium" entitlement  → "unlock" (unlimited items + outfits)
+ *   active entitlement → "unlock" (unlimited items + outfits)
  *
  * PurchaseResult:
  *   "success"     — subscription activated
@@ -19,7 +19,7 @@ import { Tier, TIER_CAPS, TierCapabilities } from "@/lib/entitlements";
 import { useSubscription } from "@/lib/revenuecat";
 
 export type PurchaseResult = "success" | "cancelled" | "unavailable";
-export type PurchaseProduct = "unlock" | "premium"; // kept for call-site compat
+export type PurchaseProduct = "unlock";
 
 // setGlobalTier is no longer needed (RC manages state) but keep the export so
 // App.tsx doesn't need special-casing if any old import remains.
@@ -44,7 +44,7 @@ export function useEntitlements() {
   );
 
   const purchase = useCallback(
-    async (_product: PurchaseProduct): Promise<PurchaseResult> => {
+    async (): Promise<PurchaseResult> => {
       const pkg = offerings?.current?.availablePackages?.[0];
       if (!pkg) return "unavailable";
 
