@@ -7,7 +7,7 @@ description: Root causes and fixes for RC purchases silently failing in a Capaci
 
 ## ROOT CAUSE 1: initializeRevenueCat() never called at startup
 
-**Why:** `main.tsx` never imported or called `initializeRevenueCat()`. The hook calls it as a fallback when a component mounts, but by that point the SDK is already needed for purchase flows. RC's native bridge was never touched at launch → RC dashboard showed "No SDK version data yet" forever.
+**Why:** `main.tsx` never imported or called `initializeRevenueCat()`. The hook calls it as a fallback when a component mounts, but by that point the SDK is already needed for purchase flows.
 
 **Fix:** Add to `main.tsx`, before `createRoot`:
 ```ts
@@ -15,17 +15,15 @@ import { initializeRevenueCat } from './lib/revenuecat';
 initializeRevenueCat().catch(console.warn);
 ```
 
-**How to apply:** For any Capacitor app using RevenueCat, `Purchases.configure()` must be called at app startup in `main.tsx` (or equivalent entry point), not lazily inside a React component or hook.
-
 ---
 
 ## ROOT CAUSE 2: pnpm symlinks — RC Swift code never compiled into binary
 
-**Why:** pnpm stores packages as symlinks. Xcode's SPM resolver cannot follow symlinks for local package references. The RC plugin (`@revenuecat/purchases-capacitor`) gets "added" to the Xcode project but its Swift code is never compiled in. All Capacitor bridge calls to `Purchases.*` hang forever — no response, no error.
+**Why:** pnpm stores packages as symlinks. Xcode's SPM resolver cannot follow symlinks. The RC plugin gets "added" to the Xcode project but its Swift code is never compiled in. All Capacitor bridge calls to `Purchases.*` hang.
 
-**Diagnostic:** `Capacitor.isPluginAvailable('Purchases')` returns `false` (even though isNativePlatform is true).
+**Diagnostic:** `Capacitor.isPluginAvailable('Purchases')` returns `false`.
 
-**Fix:** In the Codemagic build script, before `cap add ios`:
+**Fix:** In Codemagic build script, before `cap add ios`:
 ```bash
 cd artifacts/outfit-generator
 RC_PATH="node_modules/@revenuecat/purchases-capacitor"
@@ -36,36 +34,49 @@ if [ -L "$RC_PATH" ]; then
 fi
 ```
 
-**How to apply:** Any Codemagic/CI build for a Capacitor app in a pnpm monorepo must dereference plugin symlinks before `cap add ios`. Apply to any other Capacitor plugins that have a `Package.swift` if they also fail.
+**How to apply:** Any Codemagic build for a Capacitor app in a pnpm monorepo must dereference plugin symlinks before `cap add ios`.
 
 ---
 
-## ROOT CAUSE 3: configure() awaited but returns CustomerInfo (network call)
+## ROOT CAUSE 3: Awaiting bridge responses that never return (RC "SDK never used")
 
-**Why:** RC Capacitor v13's `configure()` returns `Promise<CustomerInfo>` — it awaits an initial network fetch to RC's servers, not just local SDK initialization. Awaiting it blocks until RC responds (can be 5–30+ seconds or timeout). RC `plugin:true` but `RC:init` forever.
+**Why:** RC Capacitor v13's `configure()` and `setLogLevel()` both require a bridge response callback from Swift → JS to resolve their Promises. If this callback lags or never fires (observed on some Capacitor 8 + SPM builds), awaiting either call blocks indefinitely. `setLogLevel()` was awaited BEFORE configure(), so configure() was **never called at all** — causing RC dashboard to show "SDK key never used" forever.
 
-**Fix:** Wrap `configure()` in a short timeout (5s). Timeout = CustomerInfo fetch is slow, but the SDK IS configured (native init is synchronous). Treat timeout as success:
+**`configure()` returns `Promise<void>`** — the native Swift `Purchases.configure()` is synchronous. RC is fully initialized the moment the JS bridge message reaches Swift. Awaiting the Promise response is unnecessary.
+
+**Fix:** Fire both calls without awaiting:
 ```ts
-try {
-  await withTimeout(Purchases.configure({ apiKey }), 5000);
-} catch (e) {
-  const msg = e instanceof Error ? e.message : String(e);
-  if (!msg.includes("timed out")) {
-    setDiag("err", msg.slice(0, 60));
-    throw e;
-  }
-  // timeout = just slow CustomerInfo fetch; SDK is ready
-}
+// setLogLevel — fire and forget
+import("@revenuecat/purchases-capacitor")
+  .then(({ LOG_LEVEL }) =>
+    Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG })
+      .then(() => console.log("[RC] setLogLevel ✓"))
+      .catch((e: unknown) => console.warn("[RC] setLogLevel failed:", e))
+  )
+  .catch(() => {});
+
+// configure() — fire and forget. SDK initializes on native the moment message arrives.
+void Purchases.configure({ apiKey })
+  .then(() => console.log("[RC] configure() bridge response ✓"))
+  .catch((e: unknown) => console.error("[RC] configure() error:", e));
+
+await Promise.resolve(); // one microtask tick before marking ready
 setDiag("ok");
 ```
 
-**How to apply:** Never await `configure()` without a timeout in RC Capacitor v13+. The SDK initializes synchronously on the native side; the async part is the first customer info network call.
+**How to apply:** Never await `configure()` or `setLogLevel()` in RC Capacitor on iOS. The native side is synchronous; the JS Promise response is unreliable on Capacitor 8 + SPM.
+
+---
+
+## isPluginAvailable('Purchases') does NOT prove the bridge works
+
+**Why:** `Capacitor.isPluginAvailable()` is a synchronous JS-side check of the plugin registry. It returns `true` if the JS module is loaded and registered — it does NOT confirm that native bridge calls will succeed or that the Swift response callback will fire.
+
+**How to apply:** Don't use `isPluginAvailable` as proof that configure() will work. The real test is whether RC dashboard shows "SDK version data" after a build.
 
 ---
 
 ## useRcReady pattern — start false, wait for configure to settle
-
-**Why:** Starting `rcReady = true` immediately (even on native) causes queries to fire before configure() has run. RC's internal queue may not be reliable. Starting `false` and setting to `true` after configure() resolves/rejects ensures queries start on a configured SDK.
 
 **Fix:**
 ```ts
@@ -86,15 +97,15 @@ function useRcReady(): boolean {
 }
 ```
 
-**How to apply:** Always unblock queries even on error (the `.catch` calling `unblock()`). Without this, any init error leaves the UI stuck loading forever.
+Always unblock queries even on error (the `.catch` calling `unblock()`).
 
 ---
 
 ## isOfferingsReady false positive when queries disabled
 
-**Why:** React Query v5: disabled queries have `isLoading = false` and `isFetching = false`, so `isOfferingsReady = true` even when queries haven't run yet. This causes "Subscription products couldn't be loaded" to appear immediately before configure() has even started.
+**Why:** React Query v5: disabled queries have `isLoading = false`, so `isOfferingsReady = true` before queries ever run.
 
-**Fix:** Gate `isOfferingsReady` on `rcReady`:
+**Fix:** Gate on `rcReady`:
 ```ts
 isOfferingsReady: rcReady && !offeringsQuery.isLoading && !offeringsQuery.isFetching,
 ```
@@ -103,24 +114,15 @@ isOfferingsReady: rcReady && !offeringsQuery.isLoading && !offeringsQuery.isFetc
 
 ## Wrong env var overriding hardcoded RC key
 
-**Why:** `VITE_REVENUECAT_IOS_KEY` in Codemagic's `build_env` group may contain a DIFFERENT app's RC key (e.g. My Digital Closet). Since the env var is non-empty, it overrides the hardcoded fallback. `configure()` authenticates against the wrong RC account.
+**Why:** `VITE_REVENUECAT_IOS_KEY` in Codemagic's env group may contain another app's RC key.
 
-**Fix:** Hardcode the RC iOS public key directly. RC public keys are designed to be in app bundles (not secrets):
+**Fix:** Hardcode the RC iOS public key directly — RC public keys are designed to be in app bundles:
 ```ts
 const RC_IOS_KEY = "appl_QMxyPWfJlvrCqHrbLhPMTgthvKc"; // My Digital Holidays
 ```
 
 ---
 
-## RC dashboard verification checklist
-
-When RC purchases aren't working, check in this order:
-1. `Capacitor.isPluginAvailable('Purchases')` → false = pnpm symlink issue (fix build script)
-2. `RC:init` with `plugin:true` → configure() hanging = await timeout issue (fix configure call)
-3. `RC:ok` but `offerings:no` → RC dashboard not configured (products, offering, packages)
-4. `RC:ok` and `offerings:yes` but purchase fails → Apple sandbox / StoreKit issue
-5. **RC dashboard → SDK Compatibility** shows "No SDK version data yet" = configure() never reached RC
-
 ## Apple sandbox propagation delay
 
-Newly configured IAP products take up to 24 hours to appear in Apple's sandbox. StoreKit hangs waiting for a product lookup that never returns. After confirming RC is connected (`RC:ok`), wait 24 hours if products still don't load.
+Newly configured IAP products take up to 24 hours to appear in Apple's sandbox.
