@@ -31,7 +31,7 @@ workflows:
         VITE_API_BASE_URL: https://my-digital-holidays.replit.app/api
         XCODE_SCHEME: App
         XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
-        XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcworkspace
+        XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcodeproj/project.xcworkspace
         COREPACK_ENABLE_STRICT: "0"
         BUNDLE_ID: com.mydigitalholidays.app
         TEAM_ID: 2A78MFVCJS
@@ -59,13 +59,6 @@ workflows:
           rm -rf ios
           npx cap add ios
           npx cap sync ios
-
-      - name: Install CocoaPods dependencies
-        script: |
-          cd artifacts/outfit-generator/ios/App
-          # Required so native Capacitor plugins (RevenueCat, Camera, etc.)
-          # are linked into the binary. Without this, plugin calls silently fail.
-          pod install --repo-update
 
       - name: Inject app icon
         script: |
@@ -142,14 +135,14 @@ workflows:
           cd artifacts/outfit-generator/ios/App
           xcodebuild \
             -resolvePackageDependencies \
-            -workspace App.xcworkspace \
+            -workspace App.xcodeproj/project.xcworkspace \
             -scheme App
 
       - name: Xcode archive
         script: |
           cd artifacts/outfit-generator/ios/App
           xcodebuild \
-            -workspace App.xcworkspace \
+            -workspace App.xcodeproj/project.xcworkspace \
             -scheme App \
             -sdk iphoneos \
             -configuration Release \
