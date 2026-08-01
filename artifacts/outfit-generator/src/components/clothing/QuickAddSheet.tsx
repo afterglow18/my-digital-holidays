@@ -108,6 +108,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const [bgProcessing, setBgProcessing] = useState(false);
   const [bgFailed,     setBgFailed]     = useState(false);
   const [selected,     setSelected]     = useState<"original" | "cleaned">("original");
+  const [batchTotal,   setBatchTotal]   = useState(0);
+  const [batchDone,    setBatchDone]    = useState(0);
 
   // Generation counter — prevents a slow first photo from clobbering a fast second.
   const bgGenRef = useRef(0);
@@ -129,6 +131,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     setCleanedUrl(null);
     setBgFailed(false);
     setSelected("original");
+    setBatchTotal(0);
+    setBatchDone(0);
     onOpenChange(false);
   }, [onOpenChange]);
 
@@ -246,8 +250,93 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
   }, [handleFile]);
 
-  const handleCameraCapture  = useCallback(() => openPhotoPicker(true),  [openPhotoPicker]);
-  const handleGalleryCapture = useCallback(() => openPhotoPicker(false), [openPhotoPicker]);
+  const handleCameraCapture = useCallback(() => openPhotoPicker(true), [openPhotoPicker]);
+
+  // Gallery — multi-select via Camera.pickImages().
+  // 1 photo → normal preview flow. Multiple → batch encode + auto-save.
+  const handleGalleryCapture = useCallback(async () => {
+    try {
+      const { photos } = await Camera.pickImages({ quality: 85, limit: 0 });
+      if (!photos.length) return;
+
+      // Single photo → go through the normal preview + bg-removal flow
+      if (photos.length === 1) {
+        const blob = await fetch(photos[0].webPath!).then(r => r.blob());
+        handleFile(blob);
+        return;
+      }
+
+      // Multiple photos — batch: encode each, try bg removal, auto-save
+      const myGen = ++bgGenRef.current;
+      setBatchTotal(photos.length);
+      setBatchDone(0);
+      setErrorMsg(null);
+      setPhase("encoding");
+
+      let saved = 0;
+      for (let i = 0; i < photos.length; i++) {
+        if (bgGenRef.current !== myGen) return; // sheet was closed mid-batch
+
+        // Fetch from device filesystem
+        let rawBlob: Blob;
+        try {
+          rawBlob = await fetch(photos[i].webPath!).then(r => r.blob());
+        } catch {
+          continue; // skip unreadable photo
+        }
+
+        // Resize to JPEG ≤ 2048px
+        let jpeg: Blob;
+        try {
+          jpeg = await encodeForUpload(rawBlob);
+        } catch {
+          continue;
+        }
+        if (bgGenRef.current !== myGen) return;
+
+        // Attempt background removal; fall back to original if it fails
+        let saveBlob = jpeg;
+        try {
+          const dataUrl   = await blobToDataUrl(jpeg);
+          const resultUrl = await removeBackground(dataUrl);
+          saveBlob = await dataUrlToBlob(resultUrl);
+        } catch {
+          // use original
+        }
+        if (bgGenRef.current !== myGen) return;
+
+        // Save
+        const base = CATEGORY_LABELS[category];
+        const autoName = existingCount + saved === 0 ? base : `${base} ${existingCount + saved + 1}`;
+        const dataUrl = await blobToDataUrl(saveBlob);
+        await new Promise<void>((resolve) => {
+          createItem.mutate(
+            { data: { name: autoName, category, imageObjectPath: dataUrl } },
+            {
+              onSuccess: (createdItem) => {
+                queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+                if (onCreated) onCreated(createdItem);
+                resolve();
+              },
+              onError: () => resolve(), // don't abort batch on single failure
+            },
+          );
+        });
+
+        saved++;
+        setBatchDone(saved);
+      }
+
+      handleClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.toLowerCase().includes("cancel") && !msg.toLowerCase().includes("user cancelled")) {
+        setErrorMsg("Could not open photo library. Please try again.");
+        setPhase("pick");
+      }
+    }
+  }, [handleFile, category, existingCount, createItem, queryClient, onCreated, handleClose]);
 
   if (!open) return null;
 
@@ -409,8 +498,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <Loader2 size={44} strokeWidth={1.5} color={C.gold} className="animate-spin" />
             </div>
             <div style={{ textAlign: "center" }}>
-              <p style={{ fontFamily: "var(--font-display, serif)", fontWeight: 800, fontSize: 22, letterSpacing: "0.04em", textTransform: "uppercase", color: C.brown, margin: 0 }}>Processing…</p>
-              <p style={{ fontSize: 13, color: C.brownFaint, marginTop: 6 }}>Getting your photo ready.</p>
+              <p style={{ fontFamily: "var(--font-display, serif)", fontWeight: 800, fontSize: 22, letterSpacing: "0.04em", textTransform: "uppercase", color: C.brown, margin: 0 }}>
+                {batchTotal > 1 ? `Adding ${batchDone + 1} of ${batchTotal}…` : "Processing…"}
+              </p>
+              <p style={{ fontSize: 13, color: C.brownFaint, marginTop: 6 }}>
+                {batchTotal > 1 ? "Removing backgrounds and saving." : "Getting your photo ready."}
+              </p>
             </div>
           </div>
         )}
