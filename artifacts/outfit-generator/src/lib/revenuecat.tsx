@@ -67,14 +67,12 @@ let _rcInitPromise: Promise<void> | null = null;
 export function initializeRevenueCat(): Promise<void> {
   if (_rcInitPromise) return _rcInitPromise;
   _rcInitPromise = (async () => {
-    _rcDiagIsNative = Capacitor.isNativePlatform();
+    const isNative = Capacitor.isNativePlatform();
     const pluginAvailable = Capacitor.isPluginAvailable("Purchases");
-    _rcDiagPluginAvailable = pluginAvailable;
-    console.log("[RC] initializeRevenueCat() start — isNative:", _rcDiagIsNative, "pluginAvailable:", pluginAvailable);
+    console.log("[RC] initializeRevenueCat() start — isNative:", isNative, "pluginAvailable:", pluginAvailable);
 
-    if (!Capacitor.isNativePlatform()) {
+    if (!isNative) {
       console.log("[RC] Not native — skipping configure()");
-      setDiag("skipped");
       return;
     }
 
@@ -85,7 +83,6 @@ export function initializeRevenueCat(): Promise<void> {
       console.log("[RC] API key:", apiKey);
     } catch (e) {
       console.error("[RC] getApiKey() threw:", e);
-      setDiag("err", `getApiKey: ${e}`);
       throw e;
     }
 
@@ -109,36 +106,11 @@ export function initializeRevenueCat(): Promise<void> {
     // queries start running.
     await Promise.resolve();
     console.log("[RC] configure() dispatched — marking ready");
-    setDiag("ok");
   })().finally(() => {
     console.log("[RC] initializeRevenueCat() settled — notifying");
     notifyRcSettled();
   });
   return _rcInitPromise;
-}
-
-// ── RC diagnostic state (temporary — remove before App Store submission) ──────
-export type RcDiagStatus = "init" | "ok" | "err" | "skipped";
-let _rcDiagStatus: RcDiagStatus = "init";
-let _rcDiagError = "";
-let _rcDiagIsNative = false;
-let _rcDiagPluginAvailable = false;
-const _rcDiagListeners: Array<() => void> = [];
-
-function setDiag(status: RcDiagStatus, err = "") {
-  _rcDiagStatus = status;
-  _rcDiagError = err;
-  _rcDiagListeners.splice(0).forEach((cb) => cb());
-}
-
-export function useRcDiag(): { status: RcDiagStatus; err: string; isNative: boolean; pluginAvailable: boolean } {
-  const [s, setS] = React.useState({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative, pluginAvailable: _rcDiagPluginAvailable });
-  React.useEffect(() => {
-    const update = () => setS({ status: _rcDiagStatus, err: _rcDiagError, isNative: _rcDiagIsNative, pluginAvailable: _rcDiagPluginAvailable });
-    _rcDiagListeners.push(update);
-    return () => { const i = _rcDiagListeners.indexOf(update); if (i !== -1) _rcDiagListeners.splice(i, 1); };
-  }, []);
-  return s;
 }
 
 // ── RC readiness signal ───────────────────────────────────────────────────────
