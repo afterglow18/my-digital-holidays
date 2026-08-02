@@ -6,12 +6,14 @@
  *
  * Version scheme (stored as visionVersion on each ClothingItem):
  *   0 (or undefined) — unanalyzed
- *   1               — iOS Vision analyzed (labels + text)
+ *   1               — iOS Vision only (no canvas colors — outdated, re-index)
+ *   2               — iOS Vision + canvas colors (current native target)
  *   4               — web canvas analyzed, labels found
  *   5               — web canvas analyzed, no labels (don't retry on web)
  *
  * Re-run logic:
- *   native iOS  → process items where visionVersion !== 1
+ *   native iOS  → process items where visionVersion !== 2
+ *                 (covers 0, 1 — v1 items get re-indexed to pick up colors)
  *   web         → process items where visionVersion < 4
  *                 (covers 0 and 1; skips 4 and 5)
  *
@@ -40,7 +42,7 @@ export async function runVisionIndexer(): Promise<void> {
     const queue = items.filter((item) => {
       if (!item.imageObjectPath) return false; // no photo to analyze
       const v = item.visionVersion ?? 0;
-      if (isNative) return v !== 1;            // native: re-run anything not yet Vision-analyzed
+      if (isNative) return v !== 2;            // native: re-run anything not yet at v2 (Vision + canvas colors)
       return v < 4;                            // web:    re-run 0 and 1; skip 4 (done) and 5 (no labels)
     });
 

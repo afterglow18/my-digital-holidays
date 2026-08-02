@@ -13,7 +13,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, Trash2, Save, ChevronDown, Sparkles, BookMarked, Shirt } from "lucide-react";
+import { X, Heart, Trash2, Save, ChevronDown, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { CleanUpPhotoOverlay } from "./CleanUpPhotoOverlay";
 import { LookbookPickerSheet } from "./LookbookPickerSheet";
@@ -284,18 +284,6 @@ export function ItemDetailsSheet({
     );
   };
 
-  const handleWearingToday = () => {
-    updateItem.mutate(
-      { id: item.id, data: { timesWorn: (item.timesWorn ?? 0) + 1 } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-          toast.success("Counted as worn today! 👗");
-        },
-      },
-    );
-  };
-
   // "Clean Up Photo" is shown: only when showAddToLookbook=false, photo exists,
   // background hasn't been removed, and not cleaned this session.
   const showCleanUpButton =
@@ -498,15 +486,30 @@ export function ItemDetailsSheet({
             )}
           </AnimatePresence>
 
-          {/* ── Context buttons: Wearing Today always shows ── */}
-          <div style={{ display: "flex", gap: 8 }}>
-
-            {/* Wearing Today — always present */}
+          {/* ── Context button ── */}
+          {showAddToLookbook ? (
             <button
-              onClick={handleWearingToday}
-              disabled={updateItem.isPending}
+              onClick={() => setShowLookbookPicker(true)}
               style={{
-                flex: 1, padding: "11px 0",
+                width: "100%", padding: "11px 0",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                borderRadius: 14,
+                border: `1.5px solid ${C.gold}`,
+                background: C.bgCard,
+                color: C.gold,
+                fontSize: 12, fontWeight: 700,
+                letterSpacing: "0.08em", textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              🎄
+              Lookbook
+            </button>
+          ) : showCleanUpButton ? (
+            <button
+              onClick={() => setShowCleanUp(true)}
+              style={{
+                width: "100%", padding: "11px 0",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 borderRadius: 14,
                 border: `1.5px solid ${C.border}`,
@@ -514,53 +517,13 @@ export function ItemDetailsSheet({
                 color: C.brown,
                 fontSize: 12, fontWeight: 700,
                 letterSpacing: "0.08em", textTransform: "uppercase",
-                cursor: updateItem.isPending ? "not-allowed" : "pointer",
-                opacity: updateItem.isPending ? 0.6 : 1,
+                cursor: "pointer",
               }}
             >
-              <Shirt size={13} />
-              Wearing Today
+              <Sparkles size={13} />
+              Clean Up Photo
             </button>
-
-            {/* Context-dependent second button */}
-            {showAddToLookbook ? (
-              <button
-                onClick={() => setShowLookbookPicker(true)}
-                style={{
-                  flex: 1, padding: "11px 0",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  borderRadius: 14,
-                  border: `1.5px solid ${C.gold}`,
-                  background: C.bgCard,
-                  color: C.gold,
-                  fontSize: 12, fontWeight: 700,
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                  cursor: "pointer",
-                }}
-              >
-                <BookMarked size={13} />
-                Lookbook
-              </button>
-            ) : showCleanUpButton ? (
-              <button
-                onClick={() => setShowCleanUp(true)}
-                style={{
-                  flex: 1, padding: "11px 0",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  borderRadius: 14,
-                  border: `1.5px solid ${C.border}`,
-                  background: C.bgCard,
-                  color: C.brown,
-                  fontSize: 12, fontWeight: 700,
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                  cursor: "pointer",
-                }}
-              >
-                <Sparkles size={13} />
-                Clean Up Photo
-              </button>
-            ) : null}
-          </div>
+          ) : null}
 
           {/* Delete */}
           {!showDeleteConfirm ? (

@@ -1,8 +1,11 @@
 /**
  * visionExtractor — photo analysis for the search indexer.
  *
- * On native iOS: delegates to the Swift VisionAnalyzer Capacitor plugin
- * (VNClassifyImageRequest + VNRecognizeTextRequest).
+ * On native iOS: runs the Swift VisionAnalyzer Capacitor plugin
+ * (VNClassifyImageRequest + VNRecognizeTextRequest) AND canvas color
+ * extraction in parallel, then merges the results. Apple Vision classifies
+ * object types ("shoe", "high heel") but never emits color names, so the
+ * canvas pass is required on native too for color search to work.
  *
  * On web: extracts dominant colors from the photo using a 48×48 canvas.
  * Background is detected by sampling 4×4 pixel patches from each corner,
@@ -150,8 +153,20 @@ export async function analyzePhoto(
     try {
       // Strip "data:image/...;base64," prefix — native plugin wants raw base64
       const base64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
-      const result: VisionResult = await VisionAnalyzer.analyze({ base64Image: base64 });
-      return { labels: result.labels ?? [], text: result.text ?? [], version: 1 };
+
+      // Run native Vision (object labels + text) and canvas color extraction in
+      // parallel. Apple Vision never emits color names, so the canvas pass is
+      // required on native for color search to work.
+      const [nativeResult, canvasColors] = await Promise.all([
+        VisionAnalyzer.analyze({ base64Image: base64 }) as Promise<VisionResult>,
+        extractColorsFromDataUrl(dataUrl),
+      ]);
+
+      // Merge: native object labels first, then canvas colors (deduped)
+      const nativeLabels = nativeResult.labels ?? [];
+      const merged = [...nativeLabels, ...canvasColors.filter((c) => !nativeLabels.includes(c))];
+
+      return { labels: merged, text: nativeResult.text ?? [], version: 2 };
     } catch (err) {
       console.warn("[Vision] Native analysis failed, falling back to web:", err);
     }
