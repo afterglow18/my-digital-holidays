@@ -251,13 +251,14 @@ export default function FavoritesPage() {
         </div>
       )}
 
-      {/* Item details sheet */}
+      {/* Item details sheet — showAddToLookbook=true so favorites → Add to Lookbook */}
       <AnimatePresence>
         {detailsItem && (
           <ItemDetailsSheet
             key={detailsItem.id}
             item={detailsItem}
             onClose={handleDetailsClose}
+            showAddToLookbook
           />
         )}
       </AnimatePresence>

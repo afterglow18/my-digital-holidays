@@ -77,6 +77,20 @@ workflows:
           npx cap add ios
           npx cap sync ios
 
+      - name: Inject native Vision plugin
+        script: |
+          # Copy the custom VisionAnalyzer Capacitor plugin into the Xcode project.
+          # The ios/ directory is regenerated every build by cap add ios, so the
+          # Swift/ObjC files live in the repo under ios-native-plugins/ and are
+          # copied here after cap sync so they are always present.
+          PLUGIN_SRC="artifacts/outfit-generator/ios-native-plugins/VisionAnalyzer"
+          PLUGIN_DST="artifacts/outfit-generator/ios/App/App"
+          echo "Copying VisionAnalyzer plugin files to $PLUGIN_DST"
+          cp "$PLUGIN_SRC/VisionAnalyzerPlugin.swift" "$PLUGIN_DST/"
+          cp "$PLUGIN_SRC/VisionAnalyzerPlugin.m"     "$PLUGIN_DST/"
+          echo "Injected:"
+          ls -la "$PLUGIN_DST/VisionAnalyzer*"
+
       - name: Inject app icon
         script: |
           ICONSET="artifacts/outfit-generator/ios/App/App/Assets.xcassets/AppIcon.appiconset"

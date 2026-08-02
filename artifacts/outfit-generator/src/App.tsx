@@ -11,6 +11,8 @@ import WelcomePage from './pages/welcome';
 import { SubscriptionProvider, initializeRevenueCat } from '@/lib/revenuecat';
 import { queryClient } from '@/lib/queryClient';
 import { BiometricLockProvider } from '@/context/BiometricLockContext';
+import { Toaster } from '@/components/ui/sonner';
+import { runVisionIndexer } from '@/lib/visionIndexer';
 
 // ── Initialise RevenueCat once at startup ────────────────────────────────────
 try {
@@ -64,6 +66,17 @@ function AppShell() {
     setEntered(true);
   }, []);
 
+  // Kick off the vision indexer after a short delay so it doesn't compete
+  // with app startup rendering.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      runVisionIndexer().catch((err) =>
+        console.warn("[VisionIndexer] Error (non-fatal):", err)
+      );
+    }, 3000);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       {/* App always renders behind the splash so it's revealed by the lighting animation */}
@@ -80,6 +93,7 @@ function App() {
       <SubscriptionProvider>
         <BiometricLockProvider>
           <AppShell />
+          <Toaster position="bottom-center" richColors />
         </BiometricLockProvider>
       </SubscriptionProvider>
     </QueryClientProvider>
