@@ -105,7 +105,7 @@ function SearchBar({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search…"
+        placeholder="Search by name, category, or notes…"
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}
