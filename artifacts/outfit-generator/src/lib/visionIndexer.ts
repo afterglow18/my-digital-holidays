@@ -59,8 +59,6 @@ export async function runVisionIndexer(): Promise<void> {
       }
     };
 
-    updateToast(0);
-
     for (let i = 0; i < queue.length; i++) {
       const item = queue[i];
 
