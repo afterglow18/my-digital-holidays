@@ -503,7 +503,7 @@ export function ItemDetailsSheet({
               }}
             >
               🎄
-              Lookbook
+              Add to Lookbook
             </button>
           ) : showCleanUpButton ? (
             <button

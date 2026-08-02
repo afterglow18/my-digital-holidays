@@ -20,7 +20,6 @@
  * The indexer is idempotent — safe to call on every app launch.
  */
 
-import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { listClothing, updateClothingItem } from "./localDB";
 import { analyzePhoto } from "./visionExtractor";
@@ -48,17 +47,6 @@ export async function runVisionIndexer(): Promise<void> {
 
     if (queue.length === 0) return;
 
-    let toastId: string | number | undefined;
-
-    const updateToast = (done: number) => {
-      const msg = `Preparing photo search… (${done}/${queue.length})`;
-      if (toastId === undefined) {
-        toastId = toast.loading(msg, { duration: Infinity });
-      } else {
-        toast.loading(msg, { id: toastId, duration: Infinity });
-      }
-    };
-
     for (let i = 0; i < queue.length; i++) {
       const item = queue[i];
 
@@ -74,15 +62,11 @@ export async function runVisionIndexer(): Promise<void> {
         // Non-fatal — continue to next item
       }
 
-      updateToast(i + 1);
-
       if (i < queue.length - 1) {
         // 350 ms delay — keeps the main thread free for UI interactions
         await new Promise<void>((r) => setTimeout(r, 350));
       }
     }
-
-    toast.dismiss(toastId);
   } catch (err) {
     console.warn("[VisionIndexer] Indexer error:", err);
   } finally {
