@@ -21,6 +21,15 @@ import { Capacitor } from "@capacitor/core";
 import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+// ── Dev-only logger ───────────────────────────────────────────────────────────
+// All [RC] / [RevenueCat] logs are stripped from production builds automatically.
+const _isDev = import.meta.env.DEV;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const rcLog   = _isDev ? (...a: any[]) => console.log(...a)   : () => {};
+const rcWarn  = _isDev ? (...a: any[]) => console.warn(...a)  : () => {};
+const rcError = _isDev ? (...a: any[]) => console.error(...a) : () => {};
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "My Digital Holidays Pro";
@@ -69,45 +78,44 @@ export function initializeRevenueCat(): Promise<void> {
   _rcInitPromise = (async () => {
     const isNative = Capacitor.isNativePlatform();
     const pluginAvailable = Capacitor.isPluginAvailable("Purchases");
-    console.log("[RC] initializeRevenueCat() start — isNative:", isNative, "pluginAvailable:", pluginAvailable);
+    rcLog("[RC] initializeRevenueCat() start — isNative:", isNative, "pluginAvailable:", pluginAvailable);
 
     if (!isNative) {
-      console.log("[RC] Not native — skipping configure()");
+      rcLog("[RC] Not native — skipping configure()");
       return;
     }
 
     let apiKey: string;
     try {
       apiKey = getApiKey();
-      // RC public keys are designed to live in the app bundle — safe to log in full
-      console.log("[RC] API key:", apiKey);
+      // RC public keys are designed to live in the app bundle; never log the key value.
     } catch (e) {
-      console.error("[RC] getApiKey() threw:", e);
+      rcError("[RC] getApiKey() threw:", e);
       throw e;
     }
 
     // setLogLevel — fire and forget. Do NOT await: the Capacitor bridge response
     // (Swift → JS callback) may never arrive on Capacitor 8 + SPM builds.
     void Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG })
-      .then(() => console.log("[RC] setLogLevel DEBUG ✓"))
-      .catch((e: unknown) => console.warn("[RC] setLogLevel failed:", e));
+      .then(() => rcLog("[RC] setLogLevel DEBUG ✓"))
+      .catch((e: unknown) => rcWarn("[RC] setLogLevel failed:", e));
 
     // configure() — fire and forget. Swift Purchases.configure() is synchronous:
     // the SDK is fully initialized the moment the bridge message arrives.
     // The Promise only resolves when the bridge response comes back to JS —
     // which may never happen on Capacitor 8 + SPM. Awaiting it blocked configure()
     // from ever reaching native, causing RC dashboard to show "SDK key never used".
-    console.log("[RC] Sending configure() to native bridge…");
+    rcLog("[RC] Sending configure() to native bridge…");
     void Purchases.configure({ apiKey })
-      .then(() => console.log("[RC] configure() bridge response received ✓"))
-      .catch((e: unknown) => console.error("[RC] configure() error:", e));
+      .then(() => rcLog("[RC] configure() bridge response received ✓"))
+      .catch((e: unknown) => rcError("[RC] configure() error:", e));
 
     // One microtask tick to ensure the bridge message is dispatched before
     // queries start running.
     await Promise.resolve();
-    console.log("[RC] configure() dispatched — marking ready");
+    rcLog("[RC] configure() dispatched — marking ready");
   })().finally(() => {
-    console.log("[RC] initializeRevenueCat() settled — notifying");
+    rcLog("[RC] initializeRevenueCat() settled — notifying");
     notifyRcSettled();
   });
   return _rcInitPromise;
@@ -139,7 +147,7 @@ function useRcReady(): boolean {
     let cancelled = false;
     const unblock = () => { if (!cancelled) setRcReady(true); };
     initializeRevenueCat().then(unblock).catch((err) => {
-      console.warn("[RevenueCat] Init failed — unblocking queries:", err);
+      rcWarn("[RevenueCat] Init failed — unblocking queries:", err);
       unblock();
     });
     // 30 s hard timeout — if something hangs, unblock so UI can show an error.
@@ -175,9 +183,9 @@ function useSubscriptionContext() {
     queryKey: ["revenuecat", "offerings"],
     enabled: rcReady,
     queryFn: async () => {
-      console.log("[RC] getOfferings() — starting (12 s timeout)");
+      rcLog("[RC] getOfferings() — starting (12 s timeout)");
       if (!Capacitor.isNativePlatform()) {
-        console.log("[RC] getOfferings() — not native, returning null");
+        rcLog("[RC] getOfferings() — not native, returning null");
         return null;
       }
       let result: Awaited<ReturnType<typeof Purchases.getOfferings>>;
@@ -186,14 +194,14 @@ function useSubscriptionContext() {
         // surface a fast error to the user instead of a 30 s blank wait.
         result = await withTimeout(Purchases.getOfferings(), 12000);
       } catch (e) {
-        console.error("[RC] getOfferings() — threw:", e);
+        rcError("[RC] getOfferings() — threw:", e);
         throw e; // rethrow so React Query retries (retry: 1)
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = (result as any).offerings ?? result ?? null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const pkgs = data?.current?.availablePackages ?? [];
-      console.log("[RC] getOfferings() — success ✓  current offering:", data?.current?.identifier ?? "none",
+      rcLog("[RC] getOfferings() — success ✓  current offering:", data?.current?.identifier ?? "none",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         "  packages:", pkgs.map((p: any) => p.identifier).join(", ") || "none");
       return data;
@@ -215,12 +223,12 @@ function useSubscriptionContext() {
         const { App } = await import("@capacitor/app");
         appListenerHandle = await App.addListener("appStateChange", ({ isActive }) => {
           if (isActive) {
-            console.log("[RevenueCat] App foregrounded — rechecking CustomerInfo");
+            rcLog("[RevenueCat] App foregrounded — rechecking CustomerInfo");
             qc.invalidateQueries({ queryKey: CUSTOMER_INFO_KEY });
           }
         });
       } catch (err) {
-        console.warn("[RevenueCat] Could not add appStateChange listener:", err);
+        rcWarn("[RevenueCat] Could not add appStateChange listener:", err);
       }
 
       // 2. RC server-push: fires when RC detects a refund, expiry, or any
@@ -228,12 +236,12 @@ function useSubscriptionContext() {
       try {
         rcCallbackId = await Purchases.addCustomerInfoUpdateListener(
           (customerInfo) => {
-            console.log("[RevenueCat] CustomerInfo pushed from server — updating cache");
+            rcLog("[RevenueCat] CustomerInfo pushed from server — updating cache");
             qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
           }
         );
       } catch (err) {
-        console.warn("[RevenueCat] Could not add CustomerInfo listener:", err);
+        rcWarn("[RevenueCat] Could not add CustomerInfo listener:", err);
       }
     })();
 
