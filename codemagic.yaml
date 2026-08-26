@@ -183,6 +183,7 @@ workflows:
             -configuration Release \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS=arm64 \
+            TARGETED_DEVICE_FAMILY=1 \
             DEVELOPMENT_TEAM=2A78MFVCJS \
             CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="My Digital Holidays AppStore" \
